@@ -13,7 +13,7 @@
 - **장르 분류 및 검색 (Genre Classification & Search)** : 일상, SF, 판타지 등 다양한 장르별 필터와 통합 키워드 검색을 지원합니다.
 
 ## 라이브 시연 링크 (Live Demo Link)
-[다이어리 구경하기](https://miju99.github.io/First_Diary_webpage/?v=2)
+[다이어리 구경하기](https://miju99.github.io/WebPage_dev/Plan_Diary/)
 
 ## 사용 기술
 - HTML5
