@@ -1,0 +1,510 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Dream Diary - 모바일 타임라인 꿈 기록소</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
+    <style>
+        body {
+            -webkit-tap-highlight-color: transparent;
+            word-break: keep-all;
+            background-color: #070908;
+        }
+        input, select, textarea {
+            font-size: 16px !important;
+        }
+        .glow-box {
+            box-shadow: 0 0 25px -5px rgba(250, 204, 21, 0.05);
+        }
+        /* 스크롤바 숨기기 */
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+    </style>
+</head>
+<body class="text-[#ecfdf5] min-h-screen p-3 sm:p-6">
+    <div class="max-w-xl mx-auto space-y-5 pb-12">
+        
+        <!-- Header -->
+        <header class="flex justify-between items-center border-b border-[#143329]/60 pb-4">
+            <div>
+                <h1 class="text-xl font-black tracking-tight text-[#facc15]">
+                    Dream Diary
+                </h1>
+            </div>
+            <div class="flex gap-1.5">
+                <button onclick="exportData()" class="bg-[#0f1f18] hover:bg-[#143329] text-[11px] text-[#a7f3d0] px-3 py-1.5 rounded-xl border border-[#1f4738] transition font-medium">백업</button>
+                <button onclick="document.getElementById('importFile').click()" class="bg-[#0f1f18] hover:bg-[#143329] text-[11px] text-[#a7f3d0] px-3 py-1.5 rounded-xl border border-[#1f4738] transition font-medium">불러오기</button>
+                <input type="file" id="importFile" class="hidden" onchange="importData(event)">
+            </div>
+        </header>
+
+        <!-- Dream Entry Form Section -->
+        <section class="bg-[#0b1411] border border-[#143329] rounded-3xl p-4 sm:p-6 glow-box space-y-4">
+            <h2 class="text-xs font-bold text-[#facc15] tracking-wider">
+                오늘의 꿈 기억 포착
+            </h2>
+            
+            <!-- Top: Title & Date -->
+            <div class="space-y-3">
+                <div>
+                    <label class="block text-[11px] text-[#a7f3d0] mb-1">꿈 대제목</label>
+                    <input type="text" id="dreamTitle" placeholder="예: 하늘에서 젤리가 떨어지는 꿈" class="w-full bg-[#060a09] border border-[#143329] rounded-xl px-3.5 py-2.5 text-sm text-[#ecfdf5] focus:outline-none focus:border-[#4ade80] transition">
+                </div>
+                
+                <div class="grid grid-cols-2 gap-2">
+                    <div>
+                        <label class="block text-[11px] text-[#a7f3d0] mb-1">날짜</label>
+                        <input type="date" id="dreamDate" class="w-full bg-[#060a09] border border-[#143329] rounded-xl px-3 py-2 text-xs text-[#ecfdf5] focus:outline-none focus:border-[#4ade80] transition">
+                    </div>
+                    <div>
+                        <label class="block text-[11px] text-[#a7f3d0] mb-1">꿈 장르</label>
+                        <select id="dreamCategory" class="w-full bg-[#060a09] border border-[#143329] text-xs rounded-xl px-3 py-2 text-[#a7f3d0] focus:outline-none focus:border-[#4ade80] transition">
+                            <option value="일상">일상</option>
+                            <option value="SF">SF</option>
+                            <option value="판타지">판타지</option>
+                            <option value="공포/스릴러">공포/스릴러</option>
+                            <option value="액션/모험">액션/모험</option>
+                            <option value="기타 초현실">기타 초현실</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Scene Blocks Container -->
+            <div class="space-y-3 pt-2">
+                <div class="flex justify-between items-center">
+                    <label class="text-xs font-semibold text-[#a7f3d0]">장면별 타임라인</label>
+                    <button onclick="addSceneBlock()" class="bg-[#4ade80]/10 text-[#4ade80] border border-[#4ade80]/30 text-xs px-3 py-1.5 rounded-xl hover:bg-[#4ade80]/20 transition font-medium">
+                        + 장면 추가
+                    </button>
+                </div>
+                
+                <div id="scenesContainer" class="space-y-3">
+                    <!-- Dynamic Scene Blocks Injected Here -->
+                </div>
+            </div>
+
+            <div class="pt-2">
+                <button onclick="saveDream()" class="w-full bg-[#facc15] hover:bg-[#eab308] text-[#070908] font-bold py-3.5 rounded-xl text-sm transition shadow-lg shadow-[#facc15]/10 active:scale-[0.99]">
+                    꿈 전체 기록 저장하기
+                </button>
+            </div>
+        </section>
+
+        <!-- Search & Filter Section -->
+        <section class="space-y-2.5">
+            <div class="relative">
+                <input type="text" id="searchInput" oninput="renderDreams()" placeholder="🔍 제목, 해시태그 또는 내용 검색..." class="w-full bg-[#0b1411] border border-[#143329] rounded-2xl px-4 py-3 text-xs text-[#ecfdf5] focus:outline-none focus:border-[#4ade80] transition">
+            </div>
+            <div class="flex items-center gap-1.5 overflow-x-auto pb-1 no-scrollbar">
+                <button onclick="filterGroup('all')" class="group-tab active-tab bg-[#facc15] text-[#070908] font-bold text-xs px-3.5 py-2 rounded-xl transition whitespace-nowrap">전체</button>
+                <button onclick="filterGroup('일상')" class="group-tab bg-[#0b1411] hover:bg-[#143329] border border-[#143329] text-[#a7f3d0] text-xs px-3.5 py-2 rounded-xl transition whitespace-nowrap">일상</button>
+                <button onclick="filterGroup('SF')" class="group-tab bg-[#0b1411] hover:bg-[#143329] border border-[#143329] text-[#a7f3d0] text-xs px-3.5 py-2 rounded-xl transition whitespace-nowrap">SF</button>
+                <button onclick="filterGroup('판타지')" class="group-tab bg-[#0b1411] hover:bg-[#143329] border border-[#143329] text-[#a7f3d0] text-xs px-3.5 py-2 rounded-xl transition whitespace-nowrap">판타지</button>
+                <button onclick="filterGroup('공포/스릴러')" class="group-tab bg-[#0b1411] hover:bg-[#143329] border border-[#143329] text-[#a7f3d0] text-xs px-3.5 py-2 rounded-xl transition whitespace-nowrap">공포/스릴러</button>
+                <button onclick="filterGroup('액션/모험')" class="group-tab bg-[#0b1411] hover:bg-[#143329] border border-[#143329] text-[#a7f3d0] text-xs px-3.5 py-2 rounded-xl transition whitespace-nowrap">액션/모험</button>
+                <button onclick="filterGroup('기타 초현실')" class="group-tab bg-[#0b1411] hover:bg-[#143329] border border-[#143329] text-[#a7f3d0] text-xs px-3.5 py-2 rounded-xl transition whitespace-nowrap">기타 초현실</button>
+            </div>
+        </section>
+
+        <!-- Saved Dreams List -->
+        <section id="dreamsList" class="space-y-4">
+            <!-- Rendered Dreams -->
+        </section>
+
+    </div>
+
+    <script>
+        let dreams = JSON.parse(localStorage.getItem('dream_advanced_data')) || [];
+        let currentFilter = 'all';
+
+        document.getElementById('dreamDate').valueAsDate = new Date();
+
+        window.onload = function() {
+            for (let i = 0; i < 2; i++) {
+                addSceneBlock();
+            }
+            renderDreams();
+        }
+
+        function addSceneBlock(data = {}) {
+            const container = document.getElementById('scenesContainer');
+            const sceneIndex = container.children.length + 1;
+            
+            const sceneDiv = document.createElement('div');
+            sceneDiv.className = "scene-block bg-[#060a09] border border-[#143329] rounded-2xl p-4 space-y-3 relative";
+            sceneDiv.innerHTML = `
+                <div class="flex justify-between items-center">
+                    <span class="text-[11px] font-extrabold text-[#facc15]">장면 #${sceneIndex}</span>
+                    <button onclick="removeSceneBlock(this)" class="text-[11px] text-[#f87171] hover:bg-[#f87171]/10 px-2 py-0.5 rounded-lg transition">삭제</button>
+                </div>
+                
+                <!-- Tag Options & Inputs -->
+                <div class="space-y-2.5">
+                    <div>
+                        <div class="flex justify-between items-center mb-1">
+                            <span class="text-[10px] text-[#a7f3d0]">시간대</span>
+                            <div class="flex gap-1">
+                                <button type="button" onclick="setMetaValue(this, 'time', '새벽')" class="text-[10px] bg-[#0b1411] border border-[#143329] hover:border-[#4ade80] px-2 py-0.5 rounded-lg text-[#a7f3d0]">새벽</button>
+                                <button type="button" onclick="setMetaValue(this, 'time', '낮')" class="text-[10px] bg-[#0b1411] border border-[#143329] hover:border-[#4ade80] px-2 py-0.5 rounded-lg text-[#a7f3d0]">낮</button>
+                                <button type="button" onclick="setMetaValue(this, 'time', '밤')" class="text-[10px] bg-[#0b1411] border border-[#143329] hover:border-[#4ade80] px-2 py-0.5 rounded-lg text-[#a7f3d0]">밤</button>
+                            </div>
+                        </div>
+                        <input type="text" placeholder="예: 하늘이 분홍빛으로 물든 이른 저녁" class="meta-time w-full bg-[#0b1411] border border-[#143329] rounded-xl px-3 py-2 text-xs text-[#ecfdf5] focus:outline-none focus:border-[#4ade80]" value="${data.time || ''}">
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-2">
+                        <div>
+                            <span class="text-[10px] text-[#a7f3d0] block mb-1">장소</span>
+                            <input type="text" placeholder="예: 탁 트인 넓은 광장" class="meta-place w-full bg-[#0b1411] border border-[#143329] rounded-xl px-3 py-2 text-xs text-[#ecfdf5] focus:outline-none focus:border-[#4ade80]" value="${data.place || ''}">
+                        </div>
+                        <div>
+                            <span class="text-[10px] text-[#a7f3d0] block mb-1">등장인물</span>
+                            <input type="text" placeholder="예: 나" class="meta-chars w-full bg-[#0b1411] border border-[#143329] rounded-xl px-3 py-2 text-xs text-[#ecfdf5] focus:outline-none focus:border-[#4ade80]" value="${data.chars || ''}">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Detailed Content -->
+                <div>
+                    <label class="block text-[10px] text-[#a7f3d0] mb-1">세세한 내용</label>
+                    <textarea placeholder="장면의 디테일을 적어보세요..." class="scene-content w-full h-20 bg-[#0b1411] border border-[#143329] rounded-xl p-3 text-xs text-[#ecfdf5] focus:outline-none focus:border-[#4ade80] resize-none">${data.content || ''}</textarea>
+                </div>
+            `;
+            container.appendChild(sceneDiv);
+            updateSceneNumbers();
+        }
+
+        function removeSceneBlock(btn) {
+            const container = document.getElementById('scenesContainer');
+            if (container.children.length <= 1) {
+                alert("최소 1개의 장면은 유지해야 합니다.");
+                return;
+            }
+            btn.closest('.scene-block').remove();
+            updateSceneNumbers();
+        }
+
+        function updateSceneNumbers() {
+            const blocks = document.querySelectorAll('.scene-block');
+            blocks.forEach((block, index) => {
+                block.querySelector('span.font-bold').textContent = `장면 #${index + 1}`;
+            });
+        }
+
+        function setMetaValue(btn, type, value) {
+            const block = btn.closest('.scene-block');
+            const input = block.querySelector(`.meta-${type}`);
+            input.value = value;
+        }
+
+        // 입력된 내용에서 핵심 키워드를 추출하여 해시태그 생성
+        function extractAutoTags(scenes) {
+            let combinedText = "";
+            scenes.forEach(s => {
+                combinedText += `${s.time} ${s.place} ${s.chars} ${s.content} `;
+            });
+            const words = combinedText.replace(/[.,\/#!$%\^&\*;:{}=\-_`~()]/g,"").split(/\s+/);
+            const filtered = words.filter(w => w.length > 1 && !['그리고', '에서', '타고', '놀았다', '이동했다', '했다', '이었다'].includes(w));
+            return [...new Set(filtered)].slice(0, 5);
+        }
+
+        function saveDream() {
+            const title = document.getElementById('dreamTitle').value.trim();
+            const date = document.getElementById('dreamDate').value;
+            const category = document.getElementById('dreamCategory').value;
+
+            if (!title) {
+                alert("꿈의 대제목을 입력해주세요!");
+                return;
+            }
+
+            const sceneBlocks = document.querySelectorAll('.scene-block');
+            const scenes = [];
+
+            sceneBlocks.forEach((block, index) => {
+                const time = block.querySelector('.meta-time').value.trim();
+                const place = block.querySelector('.meta-place').value.trim();
+                const chars = block.querySelector('.meta-chars').value.trim();
+                const content = block.querySelector('.scene-content').value.trim();
+
+                scenes.push({ sceneNumber: index + 1, time, place, chars, content });
+            });
+
+            const tags = extractAutoTags(scenes);
+            const newDream = { id: Date.now(), title, date, category, scenes, tags };
+            
+            dreams.unshift(newDream);
+            syncStorage();
+            resetForm();
+            renderDreams();
+        }
+
+        function resetForm() {
+            document.getElementById('dreamTitle').value = '';
+            document.getElementById('scenesContainer').innerHTML = '';
+            for (let i = 0; i < 2; i++) {
+                addSceneBlock();
+            }
+        }
+
+        function syncStorage() {
+            localStorage.setItem('dream_advanced_data', JSON.stringify(dreams));
+        }
+
+        function filterGroup(category) {
+            currentFilter = category;
+            document.querySelectorAll('.group-tab').forEach(btn => {
+                btn.classList.remove('bg-[#facc15]', 'text-[#070908]', 'font-bold');
+                btn.classList.add('bg-[#0b1411]', 'hover:bg-[#143329]', 'border', 'border-[#143329]', 'text-[#a7f3d0]');
+            });
+            event.target.classList.remove('bg-[#0b1411]', 'hover:bg-[#143329]', 'border', 'border-[#143329]', 'text-[#a7f3d0]');
+            event.target.classList.add('bg-[#facc15]', 'text-[#070908]', 'font-bold');
+            renderDreams();
+        }
+
+        function renderDreams() {
+            const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+            const container = document.getElementById('dreamsList');
+
+            const filtered = dreams.filter(d => {
+                const matchesCategory = currentFilter === 'all' || d.category === currentFilter;
+                const matchesSearch = d.title.toLowerCase().includes(searchTerm) || 
+                    d.scenes.some(s => s.content.toLowerCase().includes(searchTerm) || s.place.toLowerCase().includes(searchTerm) || s.chars.toLowerCase().includes(searchTerm)) ||
+                    (d.tags && d.tags.some(t => t.toLowerCase().includes(searchTerm)));
+                return matchesCategory && matchesSearch;
+            });
+
+            if (filtered.length === 0) {
+                container.innerHTML = `
+                    <div class="text-center py-12 text-[#4e7967] text-xs bg-[#0b1411] border border-[#143329] rounded-2xl">
+                        저장된 꿈 기록이 없습니다.
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = filtered.map(d => `
+                <div id="dream-card-${d.id}" class="bg-[#0b1411] border border-[#143329] rounded-3xl p-5 space-y-4 shadow-xl">
+                    <div class="flex justify-between items-start gap-2 border-b border-[#143329]/60 pb-3">
+                        <div class="space-y-1">
+                            <div class="flex items-center gap-1.5">
+                                <span class="text-[10px] px-2 py-0.5 rounded-lg bg-[#143329] text-[#4ade80] font-bold">${d.category}</span>
+                                <span class="text-[10px] text-[#4e7967]">${d.date}</span>
+                            </div>
+                            <h3 class="text-base font-extrabold text-[#ecfdf5]">${escapeHtml(d.title)}</h3>
+                        </div>
+                        <div class="flex flex-wrap gap-1 justify-end max-w-[150px]">
+                            <button onclick="exportToTxt(${d.id})" class="text-[10px] bg-[#143329] hover:bg-[#1b4332] text-[#4ade80] px-2.5 py-1 rounded-lg transition font-medium">메모</button>
+                            <button onclick="exportToPng(${d.id})" class="text-[10px] bg-[#143329] hover:bg-[#1b4332] text-[#facc15] px-2.5 py-1 rounded-lg transition font-medium">이미지</button>
+                            <button onclick="copyDreamToVibeCode(${d.id})" class="text-[10px] bg-[#143329] hover:bg-[#1b4332] text-[#38bdf8] px-2.5 py-1 rounded-lg transition font-medium">코드</button>
+                            <button onclick="deleteDream(${d.id})" class="text-[10px] text-[#f87171] hover:bg-[#f87171]/10 px-2 py-1 rounded-lg transition">삭제</button>
+                        </div>
+                    </div>
+
+                    <!-- 타임라인 시각화 흐름도 뷰 -->
+                    <div class="bg-[#060a09] border border-[#143329]/70 rounded-2xl p-3.5 space-y-2.5">
+                        <div class="text-[11px] font-bold text-[#facc15] flex items-center gap-1">
+                            <span>🗺️</span> 타임라인 흐름도
+                        </div>
+                        <div class="flex items-center gap-2 overflow-x-auto pb-1 no-scrollbar">
+                            ${d.scenes.map((s, idx) => `
+                                <div class="flex items-center gap-2 shrink-0">
+                                    <div class="bg-[#0b1411] border border-[#143329] rounded-xl p-2.5 min-w-[120px] space-y-1">
+                                        <div class="text-[10px] font-bold text-[#4ade80]">#장면 ${s.sceneNumber}</div>
+                                        <div class="text-[10px] text-[#a7f3d0] truncate">📍 ${escapeHtml(s.place || '미지')}</div>
+                                        <div class="text-[10px] text-[#6b9c87] truncate">👤 ${escapeHtml(s.chars || '혼자')}</div>
+                                    </div>
+                                    ${idx < d.scenes.length - 1 ? `<span class="text-[#4e7967] font-bold">→</span>` : ''}
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+
+                    <!-- 자동 추출된 해시태그 -->
+                    ${d.tags && d.tags.length > 0 ? `
+                        <div class="flex flex-wrap gap-1.5 pt-1">
+                            ${d.tags.map(t => `<span class="text-[10px] bg-[#060a09] border border-[#143329] text-[#a7f3d0] px-2.5 py-0.5 rounded-lg">#${t}</span>`).join('')}
+                        </div>
+                    ` : ''}
+
+                    <!-- Scenes Details View -->
+                    <div class="space-y-2.5 pt-1">
+                        ${d.scenes.map(s => `
+                            <div class="bg-[#060a09] border border-[#143329]/70 rounded-2xl p-3.5 space-y-1.5">
+                                <div class="text-[11px] text-[#facc15] font-bold">장면 #${s.sceneNumber}</div>
+                                <div class="flex flex-wrap gap-1 text-[10px]">
+                                    ${s.time ? `<span class="bg-[#0b1411] text-[#a7f3d0] px-2 py-0.5 rounded-lg border border-[#143329]">시간대 : ${escapeHtml(s.time)}</span>` : ''}
+                                    ${s.place ? `<span class="bg-[#0b1411] text-[#a7f3d0] px-2 py-0.5 rounded-lg border border-[#143329]">장소 : ${escapeHtml(s.place)}</span>` : ''}
+                                    ${s.chars ? `<span class="bg-[#0b1411] text-[#a7f3d0] px-2 py-0.5 rounded-lg border border-[#143329]">등장인물 : ${escapeHtml(s.chars)}</span>` : ''}
+                                </div>
+                                <p class="text-xs text-[#a7f3d0] whitespace-pre-wrap leading-relaxed pt-1"><strong class="text-[#ecfdf5]">내용 :</strong> ${escapeHtml(s.content || '내용 없음')}</p>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function deleteDream(id) {
+            if (confirm("이 꿈 기록을 삭제하시겠습니까?")) {
+                dreams = dreams.filter(d => d.id !== id);
+                syncStorage();
+                renderDreams();
+            }
+        }
+
+        function formatDateWithDay(dateString) {
+            if (!dateString) return '';
+            const date = new Date(dateString);
+            const days = ['일', '월', '화', '수', '목', '금', '토'];
+            const year = date.getFullYear();
+            const month = String(date.getMonth() + 1).padStart(2, '0');
+            const day = String(date.getDate()).padStart(2, '0');
+            const dayOfWeek = days[date.getDay()];
+            return `${year}.${month}.${day}(${dayOfWeek})`;
+        }
+
+        function exportToTxt(id) {
+            const dream = dreams.find(d => d.id === id);
+            if (!dream) return;
+
+            const formattedDate = formatDateWithDay(dream.date);
+
+            let textContent = `제목 : ${dream.title}\n`;
+            textContent += `일자 : ${formattedDate}\n`;
+            textContent += `장르 : ${dream.category}\n`;
+            textContent += `----------------------------------------\n`;
+
+            dream.scenes.forEach((s, index) => {
+                textContent += `장면#${s.sceneNumber}\n`;
+                textContent += `시간대 : ${s.time || '없음'}\n`;
+                textContent += `장소 : ${s.place || '없음'}\n`;
+                textContent += `등장인물 : ${s.chars || '없음'}\n`;
+                textContent += `내용 : ${s.content || '내용 없음'}\n`;
+                
+                if (index < dream.scenes.length - 1) {
+                    textContent += `----------------------------------------\n`;
+                }
+            });
+
+            const blob = new Blob([textContent], { type: 'text/plain;charset=utf-8' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            const safeTitle = dream.title.replace(/[\/\\?%*:|"<>]/g, '_');
+            a.download = `${safeTitle}.txt`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }
+
+        function exportToPng(id) {
+            const dream = dreams.find(d => d.id === id);
+            const cardElement = document.getElementById(`dream-card-${id}`);
+            if (!cardElement || !dream) return;
+
+            const buttons = cardElement.querySelector('.flex.flex-wrap');
+            if (buttons) buttons.style.display = 'none';
+
+            html2canvas(cardElement, {
+                scale: 2,
+                backgroundColor: '#070908'
+            }).then(canvas => {
+                if (buttons) buttons.style.display = 'flex';
+                
+                const image = canvas.toDataURL('image/png');
+                const a = document.createElement('a');
+                a.href = image;
+                const safeTitle = dream.title.replace(/[\/\\?%*:|"<>]/g, '_');
+                a.download = `${safeTitle}.png`;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+            }).catch(err => {
+                if (buttons) buttons.style.display = 'flex';
+                alert("이미지 저장 중 오류가 발생했습니다.");
+            });
+        }
+
+        function copyDreamToVibeCode(id) {
+            const dream = dreams.find(d => d.id === id);
+            if (!dream) return;
+
+            const scenesText = dream.scenes.map(s => `
+    // Scene ${s.sceneNumber}
+    {
+        time: "${s.time}",
+        place: "${s.place}",
+        characters: "${s.chars}",
+        description: \`${s.content}\`
+    }`).join(',');
+
+            const vibeFormat = `// ==========================================
+// VIBE CODING: TIMELINE DREAM SPECIFICATION
+// ==========================================
+/*
+  Title: ${dream.title}
+  Date: ${dream.date}
+  Genre: ${dream.category}
+*/
+
+class ${dream.title.replace(/[^a-zA-Z0-9]/g, '') || 'DreamSequence'} {
+    constructor() {
+        this.timelineScenes = [${scenesText}
+        ];
+        this.status = "CONCEPT_READY";
+    }
+}
+export default new ${dream.title.replace(/[^a-zA-Z0-9]/g, '') || 'DreamSequence'}();`;
+
+            navigator.clipboard.writeText(vibeFormat).then(() => {
+                alert("클립보드에 바이브 코드가 복사되었습니다!");
+            });
+        }
+
+        function exportData() {
+            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(dreams, null, 2));
+            const dlAnchor = document.createElement('a');
+            dlAnchor.setAttribute("href", dataStr);
+            dlAnchor.setAttribute("download", `dream_advanced_${new Date().toISOString().slice(0,10)}.json`);
+            document.body.appendChild(dlAnchor);
+            dlAnchor.click();
+            dlAnchor.remove();
+        }
+
+        function importData(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const imported = JSON.parse(e.target.result);
+                    if (Array.isArray(imported)) {
+                        dreams = imported;
+                        syncStorage();
+                        renderDreams();
+                        alert("데이터를 성공적으로 불러왔습니다!");
+                    }
+                } catch (err) {
+                    alert("잘못된 파일 형식입니다.");
+                }
+            };
+            reader.readAsText(file);
+        }
+
+        function escapeHtml(text) {
+            if (!text) return '';
+            return text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
+        }
+    </script>
+</body>
+</html>
