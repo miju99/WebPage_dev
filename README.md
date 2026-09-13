@@ -2,7 +2,7 @@
 웹페이지 제작
 
 ## 다이어리 바로가기
-https://miju99.github.io/WebPage_dev/
+[링크](https://miju99.github.io/WebPage_dev/)
 
 001. Plan_Diary
   - 일정을 정리할 수 있는 다이어리\
