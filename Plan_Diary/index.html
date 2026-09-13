@@ -1,510 +1,2014 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Dream Diary - 모바일 타임라인 꿈 기록소</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
-    <style>
-        body {
-            -webkit-tap-highlight-color: transparent;
-            word-break: keep-all;
-            background-color: #070908;
-        }
-        input, select, textarea {
-            font-size: 16px !important;
-        }
-        .glow-box {
-            box-shadow: 0 0 25px -5px rgba(250, 204, 21, 0.05);
-        }
-        /* 스크롤바 숨기기 */
-        .no-scrollbar::-webkit-scrollbar {
-            display: none;
-        }
-        .no-scrollbar {
-            -ms-overflow-style: none;
-            scrollbar-width: none;
-        }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>다이어리 & 버퍼 플래너 🧸</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    @import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css');
+    @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@700;800&display=swap');
+    
+    * { font-family: 'Pretendard', sans-serif; }
+    .font-coding { font-family: 'JetBrains Mono', monospace, Consolas, Courier; }
+    
+    input[type="number"]::-webkit-inner-spin-button,
+    input[type="number"]::-webkit-outer-spin-button {
+      -webkit-appearance: none;
+      margin: 0;
+    }
+  </style>
 </head>
-<body class="text-[#ecfdf5] min-h-screen p-3 sm:p-6">
-    <div class="max-w-xl mx-auto space-y-5 pb-12">
+<body class="min-h-screen bg-[#FFFDF9] text-[#5C5446] p-4 sm:p-8 selection:bg-pink-100">
+  <div class="max-w-5xl mx-auto space-y-8">
+    
+    <!-- 상단 헤더 & 컨트롤 -->
+    <header class="flex flex-col sm:flex-row items-center justify-between gap-4 border-b border-[#F2ECE1] pb-6">
+      <div class="text-left space-y-1">
+        <div class="inline-flex items-center gap-2 bg-pink-50 border border-pink-200/60 px-3 py-1 rounded-full text-pink-600 text-xs font-bold tracking-wide">
+          ✨ 로컬 보안 저장 모드 가동 중
+        </div>
         
-        <!-- Header -->
-        <header class="flex justify-between items-center border-b border-[#143329]/60 pb-4">
-            <div>
-                <h1 class="text-xl font-black tracking-tight text-[#facc15]">
-                    Dream Diary
-                </h1>
-            </div>
-            <div class="flex gap-1.5">
-                <button onclick="exportData()" class="bg-[#0f1f18] hover:bg-[#143329] text-[11px] text-[#a7f3d0] px-3 py-1.5 rounded-xl border border-[#1f4738] transition font-medium">백업</button>
-                <button onclick="document.getElementById('importFile').click()" class="bg-[#0f1f18] hover:bg-[#143329] text-[11px] text-[#a7f3d0] px-3 py-1.5 rounded-xl border border-[#1f4738] transition font-medium">불러오기</button>
-                <input type="file" id="importFile" class="hidden" onchange="importData(event)">
-            </div>
-        </header>
+        <div class="flex items-center gap-2">
+          <h1 id="appTitleDisplay" class="text-3xl sm:text-4xl font-black text-[#433B32] font-coding tracking-tight">
+            Hello World!
+          </h1>
+          <input 
+            type="text" 
+            id="appTitleInput" 
+            onkeydown="if(event.key==='Enter') saveAppTitle()"
+            class="hidden text-2xl sm:text-3xl font-black text-[#433B32] font-coding bg-[#FAF6F0] px-3 py-1 rounded-xl border border-pink-300 outline-none"
+          >
+          <button 
+            id="editTitleBtn" 
+            onclick="enableTitleEdit()" 
+            class="p-1.5 text-gray-400 hover:text-pink-500 hover:bg-pink-50 rounded-xl transition"
+            title="제목 수정하기"
+          >
+            ✏️
+          </button>
+          <button 
+            id="saveTitleBtn" 
+            onclick="saveAppTitle()" 
+            class="hidden px-3 py-1 bg-pink-400 hover:bg-pink-500 text-white text-xs font-bold rounded-xl shadow-xs transition"
+          >
+            저장
+          </button>
+        </div>
+      </div>
 
-        <!-- Dream Entry Form Section -->
-        <section class="bg-[#0b1411] border border-[#143329] rounded-3xl p-4 sm:p-6 glow-box space-y-4">
-            <h2 class="text-xs font-bold text-[#facc15] tracking-wider">
-                오늘의 꿈 기억 포착
-            </h2>
+      <div class="flex flex-wrap items-center gap-2">
+        <button onclick="toggleRoutineModal(true)" class="px-3.5 py-2 bg-rose-100 hover:bg-rose-200 text-rose-800 text-xs font-bold rounded-2xl border border-rose-200 shadow-xs transition active:scale-95 flex items-center gap-1.5">
+          🍩 Circular Routine
+        </button>
+        <button onclick="toggleTodoModal(true)" class="px-3.5 py-2 bg-amber-100 hover:bg-amber-200 text-amber-800 text-xs font-bold rounded-2xl border border-amber-200 shadow-xs transition active:scale-95 flex items-center gap-1.5">
+          📝 To Do List
+        </button>
+        <button onclick="exportData()" class="px-3.5 py-2 bg-white hover:bg-pink-50 text-pink-600 text-xs font-bold rounded-2xl border border-pink-200 shadow-xs transition active:scale-95 flex items-center gap-1.5">
+          💾 데이터 백업 (파일 다운)
+        </button>
+        <label class="px-3.5 py-2 bg-[#FAF6F0] hover:bg-[#F2ECE1] text-[#6B6152] text-xs font-bold rounded-2xl border border-[#ECE4D5] cursor-pointer shadow-xs transition active:scale-95 flex items-center gap-1.5">
+          📂 백업 파일 불러오기
+          <input type="file" id="importFileInput" accept=".json" onchange="importData(event)" class="hidden">
+        </label>
+      </div>
+    </header>
+
+    <!-- 1. 만년 달력 -->
+    <section class="bg-white rounded-3xl p-6 sm:p-8 shadow-[0_4px_20px_rgba(240,232,220,0.6)] border border-[#F2ECE1] space-y-4">
+      
+      <!-- 달력 위 D-day 바 영역 -->
+      <div class="space-y-2 pb-3 border-b border-[#F5EFE6]">
+        <div class="flex items-center justify-between">
+          <span class="text-xs font-bold text-[#8C7E6C]">
+            D-Day
+          </span>
+          <button onclick="toggleDdayModal(true)" class="text-xs font-bold text-pink-600 bg-pink-50 hover:bg-pink-100 px-2.5 py-1 rounded-xl transition">
+            + D-day 설정/추가
+          </button>
+        </div>
+        <div id="ddayContainer" class="grid grid-cols-1 sm:grid-cols-3 md:grid-cols-4 gap-2.5"></div>
+      </div>
+
+      <!-- 달력 내 가장 위쪽 헤더 바 -->
+      <div class="flex flex-wrap items-center justify-between gap-3 pb-3 border-b border-[#F5EFE6]">
+        
+        <div class="flex items-center gap-2 flex-1 min-w-[260px] relative">
+          <!-- 아이콘 변경 버튼 & 드롭다운 -->
+          <div class="relative">
+            <button 
+              id="calIconBtn" 
+              onclick="toggleIconPicker(event)" 
+              class="w-8 h-8 rounded-xl bg-amber-100 hover:bg-amber-200 text-amber-800 text-sm font-bold flex items-center justify-center transition active:scale-95 shadow-2xs"
+              title="아이콘 변경하기"
+            >
+              📅
+            </button>
             
-            <!-- Top: Title & Date -->
-            <div class="space-y-3">
-                <div>
-                    <label class="block text-[11px] text-[#a7f3d0] mb-1">꿈 대제목</label>
-                    <input type="text" id="dreamTitle" placeholder="예: 하늘에서 젤리가 떨어지는 꿈" class="w-full bg-[#060a09] border border-[#143329] rounded-xl px-3.5 py-2.5 text-sm text-[#ecfdf5] focus:outline-none focus:border-[#4ade80] transition">
-                </div>
-                
-                <div class="grid grid-cols-2 gap-2">
-                    <div>
-                        <label class="block text-[11px] text-[#a7f3d0] mb-1">날짜</label>
-                        <input type="date" id="dreamDate" class="w-full bg-[#060a09] border border-[#143329] rounded-xl px-3 py-2 text-xs text-[#ecfdf5] focus:outline-none focus:border-[#4ade80] transition">
-                    </div>
-                    <div>
-                        <label class="block text-[11px] text-[#a7f3d0] mb-1">꿈 장르</label>
-                        <select id="dreamCategory" class="w-full bg-[#060a09] border border-[#143329] text-xs rounded-xl px-3 py-2 text-[#a7f3d0] focus:outline-none focus:border-[#4ade80] transition">
-                            <option value="일상">일상</option>
-                            <option value="SF">SF</option>
-                            <option value="판타지">판타지</option>
-                            <option value="공포/스릴러">공포/스릴러</option>
-                            <option value="액션/모험">액션/모험</option>
-                            <option value="기타 초현실">기타 초현실</option>
-                        </select>
-                    </div>
-                </div>
+            <div id="iconPickerPopup" class="hidden absolute top-10 left-0 z-30 bg-white p-2 rounded-2xl border border-[#F2ECE1] shadow-lg flex items-center gap-1.5">
+              <button onclick="selectCalIcon('📅')" class="p-1.5 hover:bg-amber-50 rounded-lg text-sm">📅</button>
+              <button onclick="selectCalIcon('🍀')" class="p-1.5 hover:bg-amber-50 rounded-lg text-sm">🍀</button>
+              <button onclick="selectCalIcon('🎧')" class="p-1.5 hover:bg-amber-50 rounded-lg text-sm">🎧</button>
+              <button onclick="selectCalIcon('🌟')" class="p-1.5 hover:bg-amber-50 rounded-lg text-sm">🌟</button>
+              <button onclick="selectCalIcon('☕')" class="p-1.5 hover:bg-amber-50 rounded-lg text-sm">☕</button>
+              <button onclick="selectCalIcon('🎨')" class="p-1.5 hover:bg-amber-50 rounded-lg text-sm">🎨</button>
+              <button onclick="selectCalIcon('💡')" class="p-1.5 hover:bg-amber-50 rounded-lg text-sm">💡</button>
+              <button onclick="selectCalIcon('🌷')" class="p-1.5 hover:bg-amber-50 rounded-lg text-sm">🌷</button>
             </div>
+          </div>
 
-            <!-- Scene Blocks Container -->
-            <div class="space-y-3 pt-2">
-                <div class="flex justify-between items-center">
-                    <label class="text-xs font-semibold text-[#a7f3d0]">장면별 타임라인</label>
-                    <button onclick="addSceneBlock()" class="bg-[#4ade80]/10 text-[#4ade80] border border-[#4ade80]/30 text-xs px-3 py-1.5 rounded-xl hover:bg-[#4ade80]/20 transition font-medium">
-                        + 장면 추가
-                    </button>
-                </div>
-                
-                <div id="scenesContainer" class="space-y-3">
-                    <!-- Dynamic Scene Blocks Injected Here -->
-                </div>
-            </div>
+          <!-- 한 달 목표/명언/문구 텍스트 영역 -->
+          <div class="flex items-center gap-1.5 flex-1 overflow-hidden">
+            <span 
+              id="calMottoDisplay" 
+              onclick="enableCalMottoEdit()" 
+              class="text-xs sm:text-sm font-semibold truncate cursor-pointer py-1 px-1.5 rounded-lg hover:bg-[#FAF6F0] transition text-gray-400"
+              title="클릭하여 목표나 문구를 적어보세요"
+            >
+              한 달 목표나 좋아하는 문구를 적어보세요!
+            </span>
+            <input 
+              type="text" 
+              id="calMottoInput" 
+              placeholder="한 달 목표나 좋아하는 문구를 적어보세요!"
+              onkeydown="if(event.key==='Enter') saveCalMotto()"
+              class="hidden flex-1 min-w-[180px] bg-[#FAF6F0] rounded-xl px-2.5 py-1 text-xs sm:text-sm border border-pink-300 font-medium outline-none text-[#433B32]"
+            >
+            <button 
+              id="editCalMottoBtn" 
+              onclick="enableCalMottoEdit()" 
+              class="text-gray-400 hover:text-pink-500 p-1 text-xs shrink-0 transition"
+              title="문구 수정하기"
+            >
+              ✏️
+            </button>
+            <button 
+              id="saveCalMottoBtn" 
+              onclick="saveCalMotto()" 
+              class="hidden px-2.5 py-1 bg-pink-400 hover:bg-pink-500 text-white font-bold text-xs rounded-xl shadow-xs transition shrink-0"
+            >
+              저장
+            </button>
+          </div>
+        </div>
 
-            <div class="pt-2">
-                <button onclick="saveDream()" class="w-full bg-[#facc15] hover:bg-[#eab308] text-[#070908] font-bold py-3.5 rounded-xl text-sm transition shadow-lg shadow-[#facc15]/10 active:scale-[0.99]">
-                    꿈 전체 기록 저장하기
-                </button>
-            </div>
-        </section>
+        <button 
+          onclick="confirmResetSelectedDate()" 
+          class="px-3 py-1.5 bg-rose-50 hover:bg-rose-100 text-rose-600 text-xs font-bold rounded-xl border border-rose-200 shadow-2xs transition active:scale-95 flex items-center gap-1 shrink-0"
+          title="현재 선택된 일자의 일정을 모두 삭제합니다"
+        >
+          🗑️ 선택 일자 초기화
+        </button>
+      </div>
 
-        <!-- Search & Filter Section -->
-        <section class="space-y-2.5">
-            <div class="relative">
-                <input type="text" id="searchInput" oninput="renderDreams()" placeholder="🔍 제목, 해시태그 또는 내용 검색..." class="w-full bg-[#0b1411] border border-[#143329] rounded-2xl px-4 py-3 text-xs text-[#ecfdf5] focus:outline-none focus:border-[#4ade80] transition">
-            </div>
-            <div class="flex items-center gap-1.5 overflow-x-auto pb-1 no-scrollbar">
-                <button onclick="filterGroup('all')" class="group-tab active-tab bg-[#facc15] text-[#070908] font-bold text-xs px-3.5 py-2 rounded-xl transition whitespace-nowrap">전체</button>
-                <button onclick="filterGroup('일상')" class="group-tab bg-[#0b1411] hover:bg-[#143329] border border-[#143329] text-[#a7f3d0] text-xs px-3.5 py-2 rounded-xl transition whitespace-nowrap">일상</button>
-                <button onclick="filterGroup('SF')" class="group-tab bg-[#0b1411] hover:bg-[#143329] border border-[#143329] text-[#a7f3d0] text-xs px-3.5 py-2 rounded-xl transition whitespace-nowrap">SF</button>
-                <button onclick="filterGroup('판타지')" class="group-tab bg-[#0b1411] hover:bg-[#143329] border border-[#143329] text-[#a7f3d0] text-xs px-3.5 py-2 rounded-xl transition whitespace-nowrap">판타지</button>
-                <button onclick="filterGroup('공포/스릴러')" class="group-tab bg-[#0b1411] hover:bg-[#143329] border border-[#143329] text-[#a7f3d0] text-xs px-3.5 py-2 rounded-xl transition whitespace-nowrap">공포/스릴러</button>
-                <button onclick="filterGroup('액션/모험')" class="group-tab bg-[#0b1411] hover:bg-[#143329] border border-[#143329] text-[#a7f3d0] text-xs px-3.5 py-2 rounded-xl transition whitespace-nowrap">액션/모험</button>
-                <button onclick="filterGroup('기타 초현실')" class="group-tab bg-[#0b1411] hover:bg-[#143329] border border-[#143329] text-[#a7f3d0] text-xs px-3.5 py-2 rounded-xl transition whitespace-nowrap">기타 초현실</button>
-            </div>
-        </section>
+      <!-- 연/월 이동 네비게이션 및 안내문구 바 -->
+      <div class="flex flex-wrap items-center gap-3">
+        <div class="flex items-center gap-1">
+          <button onclick="changeMonth(-1)" class="p-2.5 rounded-2xl bg-[#FAF6F0] hover:bg-[#F2ECE1] transition active:scale-95 text-[#6B6152] font-bold">◀</button>
+          <button onclick="changeMonth(1)" class="p-2.5 rounded-2xl bg-[#FAF6F0] hover:bg-[#F2ECE1] transition active:scale-95 text-[#6B6152] font-bold">▶</button>
+        </div>
 
-        <!-- Saved Dreams List -->
-        <section id="dreamsList" class="space-y-4">
-            <!-- Rendered Dreams -->
-        </section>
+        <div class="flex items-center gap-1.5 bg-[#FAF6F0] px-3.5 py-1.5 rounded-2xl border border-[#ECE4D5]">
+          <input 
+            type="number" 
+            id="calYear" 
+            onkeydown="if(event.key==='Enter') goToSpecifiedDate()"
+            placeholder="연도" 
+            class="w-16 bg-white px-1.5 py-1 rounded-xl text-center font-bold text-sm text-[#433B32] border border-[#E0D5C1] outline-none focus:border-pink-300"
+          >
+          <span class="font-bold text-sm text-[#8C7E6C]">년</span>
+          <input 
+            type="number" 
+            id="calMonth" 
+            min="1" 
+            max="12" 
+            onkeydown="if(event.key==='Enter') goToSpecifiedDate()"
+            placeholder="월" 
+            class="w-12 bg-white px-1.5 py-1 rounded-xl text-center font-bold text-sm text-[#433B32] border border-[#E0D5C1] outline-none focus:border-pink-300"
+          >
+          <span class="font-bold text-sm text-[#8C7E6C]">월</span>
+          <button 
+            onclick="goToSpecifiedDate()" 
+            class="ml-1 px-3 py-1 bg-amber-100 hover:bg-amber-200 text-amber-800 text-xs font-bold rounded-xl transition active:scale-95"
+          >
+            이동
+          </button>
+        </div>
 
+        <div class="flex items-center gap-2 flex-nowrap">
+          <button 
+            onclick="goToToday()" 
+            class="px-3.5 py-2 bg-pink-100 hover:bg-pink-200 text-pink-700 text-xs font-bold rounded-2xl border border-pink-200 shadow-xs transition active:scale-95 flex items-center gap-1 shrink-0 whitespace-nowrap"
+          >
+            🏠 오늘로 가기
+          </button>
+          <span class="text-xs bg-amber-50 text-amber-700 px-3 py-2 rounded-xl border border-amber-200/60 font-medium whitespace-nowrap shrink-0">
+            💡 달력 내 일정이나 아래 할 일 카드를 꾹 잡아 다른 날짜로 끌어다 놓으세요!
+          </span>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-7 gap-2 mb-2 pt-2">
+        <div class="text-center py-2 text-xs font-bold rounded-xl text-rose-400 bg-rose-50/50">일</div>
+        <div class="text-center py-2 text-xs font-bold rounded-xl text-[#8C7E6C]">월</div>
+        <div class="text-center py-2 text-xs font-bold rounded-xl text-[#8C7E6C]">화</div>
+        <div class="text-center py-2 text-xs font-bold rounded-xl text-[#8C7E6C]">수</div>
+        <div class="text-center py-2 text-xs font-bold rounded-xl text-[#8C7E6C]">목</div>
+        <div class="text-center py-2 text-xs font-bold rounded-xl text-[#8C7E6C]">금</div>
+        <div class="text-center py-2 text-xs font-bold rounded-xl text-blue-400 bg-blue-50/50">토</div>
+      </div>
+
+      <div id="calendarGrid" class="grid grid-cols-7 gap-2"></div>
+    </section>
+
+    <!-- 2. 이 달의 목표 -->
+    <section class="grid sm:grid-cols-2 gap-4">
+      <div class="bg-[#FFF9F6] rounded-3xl p-6 border border-[#FEECE5] shadow-sm">
+        <div class="flex items-center gap-2 mb-4">
+          <span class="p-2 bg-rose-100 text-rose-600 rounded-xl">♥</span>
+          <h3 class="font-bold text-[#433B32]">이 달에 꼭 해야 할 일</h3>
+        </div>
+        <div id="mustDoList" class="space-y-2"></div>
+        <button onclick="openEditModal('goal', 'mustDo', null)" class="w-full mt-3 py-2 bg-white/70 hover:bg-white text-xs font-bold text-rose-500 rounded-xl border border-dashed border-rose-200 transition">
+          + 꼭 해야 할 일 추가
+        </button>
+      </div>
+
+      <div class="bg-[#F6FAF8] rounded-3xl p-6 border border-[#E3F2EB] shadow-sm">
+        <div class="flex items-center gap-2 mb-4">
+          <span class="p-2 bg-emerald-100 text-emerald-600 rounded-xl">★</span>
+          <h3 class="font-bold text-[#433B32]">하고 싶은 일</h3>
+        </div>
+        <div id="wishDoList" class="space-y-2"></div>
+        <button onclick="openEditModal('goal', 'wishDo', null)" class="w-full mt-3 py-2 bg-white/70 hover:bg-white text-xs font-bold text-emerald-600 rounded-xl border border-dashed border-emerald-200 transition">
+          + 위시 추가
+        </button>
+      </div>
+    </section>
+
+    <!-- 날짜 인디케이터 -->
+    <div class="flex items-center justify-between bg-amber-50/70 border border-amber-200 px-5 py-3 rounded-2xl">
+      <div class="flex items-center gap-2">
+        <span class="text-sm font-bold text-[#433B32]">📅 현재 확인/수정 중인 날짜:</span>
+        <span id="selectedDateBadge" class="text-sm font-extrabold text-pink-600 font-coding bg-white px-3 py-0.5 rounded-lg border border-pink-200">2026-09-12</span>
+      </div>
+      <span class="text-xs text-[#8C7E6C]">달력에서 다른 날짜를 누르면 해당 일의 예산/태스크로 즉시 전환됩니다.</span>
     </div>
 
-    <script>
-        let dreams = JSON.parse(localStorage.getItem('dream_advanced_data')) || [];
-        let currentFilter = 'all';
+    <!-- 3. 24시간 타임 버퍼 계산기 -->
+    <section class="bg-white rounded-3xl p-6 sm:p-8 shadow-[0_4px_20px_rgba(240,232,220,0.6)] border border-[#F2ECE1] space-y-6">
+      <div class="flex flex-wrap items-center justify-between gap-2">
+        <div class="flex items-center gap-2">
+          <span class="p-2 bg-amber-100 text-amber-700 rounded-xl font-bold">⏰</span>
+          <h2 class="font-bold text-lg text-[#433B32]">24시간 타임 버퍼 계산기</h2>
+        </div>
+        <div class="text-xs text-[#8C7E6C] bg-[#FAF6F0] px-3 py-1.5 rounded-xl border border-[#ECE4D5]">
+          작성은 <strong class="text-pink-600 font-bold">00:00(시:분)</strong> 형식으로, 계산 및 표기는 <strong class="text-pink-600 font-bold">h</strong>로 산정됩니다
+        </div>
+      </div>
 
-        document.getElementById('dreamDate').valueAsDate = new Date();
+      <div class="space-y-2">
+        <h4 class="text-xs font-bold text-[#8C7E6C] tracking-wide">필수 소모 시간 (1배수 계산)</h4>
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+          <div class="bg-[#FAF6F0] p-3 rounded-2xl border border-[#ECE4D5]">
+            <span class="text-xs font-medium text-[#6B6152] block mb-1">수면 🌙</span>
+            <div class="flex items-center gap-1">
+              <input type="text" id="sleepTime" placeholder="07:00" onchange="calculateTimeBudget()" class="w-full bg-white rounded-xl px-2 py-1 text-sm font-bold text-center border border-[#E0D5C1] outline-none font-coding">
+              <span id="sleepTimeHours" class="text-xs text-[#8C7E6C] shrink-0">7.0h</span>
+            </div>
+          </div>
+          <div class="bg-[#FAF6F0] p-3 rounded-2xl border border-[#ECE4D5]">
+            <span class="text-xs font-medium text-[#6B6152] block mb-1">식사 🍚</span>
+            <div class="flex items-center gap-1">
+              <input type="text" id="mealTime" placeholder="02:00" onchange="calculateTimeBudget()" class="w-full bg-white rounded-xl px-2 py-1 text-sm font-bold text-center border border-[#E0D5C1] outline-none font-coding">
+              <span id="mealTimeHours" class="text-xs text-[#8C7E6C] shrink-0">2.0h</span>
+            </div>
+          </div>
+          <div class="bg-[#FAF6F0] p-3 rounded-2xl border border-[#ECE4D5]">
+            <span class="text-xs font-medium text-[#6B6152] block mb-1">이동 🚌</span>
+            <div class="flex items-center gap-1">
+              <input type="text" id="commuteTime" placeholder="01:30" onchange="calculateTimeBudget()" class="w-full bg-white rounded-xl px-2 py-1 text-sm font-bold text-center border border-[#E0D5C1] outline-none font-coding">
+              <span id="commuteTimeHours" class="text-xs text-[#8C7E6C] shrink-0">1.5h</span>
+            </div>
+          </div>
+          <div class="bg-[#FAF6F0] p-3 rounded-2xl border border-[#ECE4D5]">
+            <span class="text-xs font-medium text-[#6B6152] block mb-1">휴식 ☕</span>
+            <div class="flex items-center gap-1">
+              <input type="text" id="restTime" placeholder="01:30" onchange="calculateTimeBudget()" class="w-full bg-white rounded-xl px-2 py-1 text-sm font-bold text-center border border-[#E0D5C1] outline-none font-coding">
+              <span id="restTimeHours" class="text-xs text-[#8C7E6C] shrink-0">1.5h</span>
+            </div>
+          </div>
+        </div>
+      </div>
 
-        window.onload = function() {
-            for (let i = 0; i < 2; i++) {
-                addSceneBlock();
-            }
-            renderDreams();
-        }
+      <div class="space-y-3">
+        <h4 class="text-xs font-bold text-[#8C7E6C] tracking-wide">그 외 일정 계획 (적은 시간 × 1.5 자동 환산)</h4>
+        <div id="customTimeList" class="space-y-2"></div>
+        <div class="flex flex-wrap items-center gap-2 pt-1">
+          <input type="text" id="customTitleInput" placeholder="일정 이름 (예: 코딩, 드로잉)" class="flex-1 min-w-[160px] bg-[#FAF6F0] rounded-xl px-3 py-2 text-sm border border-[#ECE4D5] outline-none">
+          <input type="text" id="customHoursInput" placeholder="02:00" class="w-24 bg-[#FAF6F0] rounded-xl px-3 py-2 text-sm border border-[#ECE4D5] outline-none text-center font-coding">
+          <button id="addCustomTimeBtn" onclick="addCustomTime()" class="px-4 py-2 rounded-xl text-sm font-bold bg-amber-100 hover:bg-amber-200 text-amber-800 transition">추가</button>
+        </div>
+      </div>
 
-        function addSceneBlock(data = {}) {
-            const container = document.getElementById('scenesContainer');
-            const sceneIndex = container.children.length + 1;
-            
-            const sceneDiv = document.createElement('div');
-            sceneDiv.className = "scene-block bg-[#060a09] border border-[#143329] rounded-2xl p-4 space-y-3 relative";
-            sceneDiv.innerHTML = `
-                <div class="flex justify-between items-center">
-                    <span class="text-[11px] font-extrabold text-[#facc15]">장면 #${sceneIndex}</span>
-                    <button onclick="removeSceneBlock(this)" class="text-[11px] text-[#f87171] hover:bg-[#f87171]/10 px-2 py-0.5 rounded-lg transition">삭제</button>
-                </div>
-                
-                <!-- Tag Options & Inputs -->
-                <div class="space-y-2.5">
-                    <div>
-                        <div class="flex justify-between items-center mb-1">
-                            <span class="text-[10px] text-[#a7f3d0]">시간대</span>
-                            <div class="flex gap-1">
-                                <button type="button" onclick="setMetaValue(this, 'time', '새벽')" class="text-[10px] bg-[#0b1411] border border-[#143329] hover:border-[#4ade80] px-2 py-0.5 rounded-lg text-[#a7f3d0]">새벽</button>
-                                <button type="button" onclick="setMetaValue(this, 'time', '낮')" class="text-[10px] bg-[#0b1411] border border-[#143329] hover:border-[#4ade80] px-2 py-0.5 rounded-lg text-[#a7f3d0]">낮</button>
-                                <button type="button" onclick="setMetaValue(this, 'time', '밤')" class="text-[10px] bg-[#0b1411] border border-[#143329] hover:border-[#4ade80] px-2 py-0.5 rounded-lg text-[#a7f3d0]">밤</button>
-                            </div>
-                        </div>
-                        <input type="text" placeholder="예: 하늘이 분홍빛으로 물든 이른 저녁" class="meta-time w-full bg-[#0b1411] border border-[#143329] rounded-xl px-3 py-2 text-xs text-[#ecfdf5] focus:outline-none focus:border-[#4ade80]" value="${data.time || ''}">
-                    </div>
+      <div class="pt-4 border-t border-[#F2ECE1] space-y-2">
+        <div class="flex justify-between items-center text-sm font-bold">
+          <span>총 소모 시간: <strong id="grandTotalText" class="text-pink-600">0.0h</strong> / 24.0h</span>
+          <span id="remainingTimeText" class="text-emerald-600">남은 시간: 24.0h ✨</span>
+        </div>
+        <div class="w-full h-3 bg-[#FAF6F0] rounded-full overflow-hidden border border-[#ECE4D5]">
+          <div id="timeProgressBar" class="h-full bg-gradient-to-r from-amber-300 to-pink-300 transition-all duration-300" style="width: 0%;"></div>
+        </div>
+        <p id="overTimeAlert" class="hidden text-rose-500 text-sm font-bold flex items-center gap-1">
+          ⚠️ 더이상 추가할 수 없습니다.
+        </p>
+      </div>
+    </section>
 
-                    <div class="grid grid-cols-2 gap-2">
-                        <div>
-                            <span class="text-[10px] text-[#a7f3d0] block mb-1">장소</span>
-                            <input type="text" placeholder="예: 탁 트인 넓은 광장" class="meta-place w-full bg-[#0b1411] border border-[#143329] rounded-xl px-3 py-2 text-xs text-[#ecfdf5] focus:outline-none focus:border-[#4ade80]" value="${data.place || ''}">
-                        </div>
-                        <div>
-                            <span class="text-[10px] text-[#a7f3d0] block mb-1">등장인물</span>
-                            <input type="text" placeholder="예: 나" class="meta-chars w-full bg-[#0b1411] border border-[#143329] rounded-xl px-3 py-2 text-xs text-[#ecfdf5] focus:outline-none focus:border-[#4ade80]" value="${data.chars || ''}">
-                        </div>
-                    </div>
-                </div>
+    <!-- 4. 일일 태스크 분류 -->
+    <section class="bg-white rounded-3xl p-6 sm:p-8 shadow-[0_4px_20px_rgba(240,232,220,0.6)] border border-[#F2ECE1] space-y-6">
+      <div class="flex items-center justify-between">
+        <h2 class="font-bold text-lg text-[#433B32]">오늘의 태스크 분류</h2>
+        <span class="text-xs text-pink-500 font-medium">🔥 필수 일정 등록 시 타임 버퍼 계산기에 자동 연동됩니다</span>
+      </div>
 
-                <!-- Detailed Content -->
-                <div>
-                    <label class="block text-[10px] text-[#a7f3d0] mb-1">세세한 내용</label>
-                    <textarea placeholder="장면의 디테일을 적어보세요..." class="scene-content w-full h-20 bg-[#0b1411] border border-[#143329] rounded-xl p-3 text-xs text-[#ecfdf5] focus:outline-none focus:border-[#4ade80] resize-none">${data.content || ''}</textarea>
-                </div>
-            `;
-            container.appendChild(sceneDiv);
-            updateSceneNumbers();
-        }
+      <form onsubmit="handleAddTask(event)" class="flex flex-wrap gap-2.5 p-4 bg-[#FAF6F0] rounded-2xl border border-[#ECE4D5]">
+        <input type="text" id="taskTitleInput" required placeholder="새로운 할 일 이름을 적어주세요..." class="flex-1 min-w-[200px] bg-white rounded-xl px-4 py-2.5 text-sm border border-[#E0D5C1] outline-none">
+        <input type="date" id="taskDateInput" required onchange="selectDate(this.value)" class="bg-white rounded-xl px-3 py-2 text-sm border border-[#E0D5C1] outline-none text-[#6B6152]">
+        <div class="flex items-center gap-1 bg-white px-2 py-1 rounded-xl border border-[#E0D5C1]">
+          <span class="text-xs text-gray-400 font-medium">예상시간</span>
+          <input type="text" id="taskDurationInput" value="01:00" placeholder="01:00" class="w-16 text-center text-sm font-bold outline-none font-coding">
+        </div>
+        <select id="taskTypeInput" class="bg-white rounded-xl px-3 py-2 text-sm border border-[#E0D5C1] outline-none text-[#6B6152] font-medium">
+          <option value="urgent">🔥 오늘 꼭 끝내야 하는 일</option>
+          <option value="optional">🌱 시간 남으면 진행할 일</option>
+          <option value="small">✨ 그 외 자잘한 일</option>
+        </select>
+        <button type="submit" class="bg-pink-400 hover:bg-pink-500 text-white font-bold px-5 py-2.5 rounded-xl text-sm transition active:scale-95 shadow-sm">
+          등록하기
+        </button>
+      </form>
 
-        function removeSceneBlock(btn) {
-            const container = document.getElementById('scenesContainer');
-            if (container.children.length <= 1) {
-                alert("최소 1개의 장면은 유지해야 합니다.");
-                return;
-            }
-            btn.closest('.scene-block').remove();
-            updateSceneNumbers();
-        }
+      <div class="grid md:grid-cols-3 gap-4">
+        <div class="space-y-3 bg-rose-50/40 p-4 rounded-2xl border border-rose-100">
+          <div class="flex items-center justify-between">
+            <span class="text-xs font-bold text-rose-600">🔥 오늘 꼭 끝내야 하는 일</span>
+            <span id="badge-urgent" class="text-xs font-bold bg-white text-rose-500 px-2 py-0.5 rounded-full border border-rose-200">0</span>
+          </div>
+          <div id="list-urgent" class="space-y-2 max-h-[300px] overflow-y-auto"></div>
+        </div>
 
-        function updateSceneNumbers() {
-            const blocks = document.querySelectorAll('.scene-block');
-            blocks.forEach((block, index) => {
-                block.querySelector('span.font-bold').textContent = `장면 #${index + 1}`;
-            });
-        }
+        <div class="space-y-3 bg-emerald-50/40 p-4 rounded-2xl border border-emerald-100">
+          <div class="flex items-center justify-between">
+            <span class="text-xs font-bold text-emerald-700">🌱 시간이 남으면 진행할 일</span>
+            <span id="badge-optional" class="text-xs font-bold bg-white text-emerald-600 px-2 py-0.5 rounded-full border border-emerald-200">0</span>
+          </div>
+          <div id="list-optional" class="space-y-2 max-h-[300px] overflow-y-auto"></div>
+        </div>
 
-        function setMetaValue(btn, type, value) {
-            const block = btn.closest('.scene-block');
-            const input = block.querySelector(`.meta-${type}`);
-            input.value = value;
-        }
+        <div class="space-y-3 bg-amber-50/40 p-4 rounded-2xl border border-amber-100">
+          <div class="flex items-center justify-between">
+            <span class="text-xs font-bold text-amber-700">✨ 그 외 자잘한 일</span>
+            <span id="badge-small" class="text-xs font-bold bg-white text-amber-600 px-2 py-0.5 rounded-full border border-amber-200">0</span>
+          </div>
+          <div id="list-small" class="space-y-2 max-h-[300px] overflow-y-auto"></div>
+        </div>
+      </div>
+    </section>
 
-        // 입력된 내용에서 핵심 키워드를 추출하여 해시태그 생성
-        function extractAutoTags(scenes) {
-            let combinedText = "";
-            scenes.forEach(s => {
-                combinedText += `${s.time} ${s.place} ${s.chars} ${s.content} `;
-            });
-            const words = combinedText.replace(/[.,\/#!$%\^&\*;:{}=\-_`~()]/g,"").split(/\s+/);
-            const filtered = words.filter(w => w.length > 1 && !['그리고', '에서', '타고', '놀았다', '이동했다', '했다', '이었다'].includes(w));
-            return [...new Set(filtered)].slice(0, 5);
-        }
+  </div>
 
-        function saveDream() {
-            const title = document.getElementById('dreamTitle').value.trim();
-            const date = document.getElementById('dreamDate').value;
-            const category = document.getElementById('dreamCategory').value;
+  <!-- 범용 중앙 편집 모달창 -->
+  <div id="editModal" class="fixed inset-0 bg-black/40 backdrop-blur-xs flex items-center justify-center hidden z-50 p-4">
+    <div class="bg-white rounded-3xl p-6 w-full max-w-sm shadow-2xl border border-[#F2ECE1] space-y-4">
+      <div class="flex items-center justify-between border-b border-[#F2ECE1] pb-3">
+        <h3 id="editModalTitle" class="font-bold text-base text-[#433B32]">항목 수정</h3>
+        <button onclick="closeEditModal()" class="text-gray-400 hover:text-rose-500 font-bold p-1 text-lg">✕</button>
+      </div>
 
-            if (!title) {
-                alert("꿈의 대제목을 입력해주세요!");
-                return;
-            }
+      <div class="space-y-3">
+        <input type="text" id="editModalInput" onkeydown="if(event.key==='Enter') submitEditModal()" class="w-full bg-[#FAF6F0] rounded-xl px-3.5 py-2.5 text-sm border border-[#ECE4D5] outline-none font-medium text-[#433B32]" placeholder="내용을 입력하세요...">
+      </div>
 
-            const sceneBlocks = document.querySelectorAll('.scene-block');
-            const scenes = [];
+      <div class="flex items-center justify-end gap-2 pt-2">
+        <button onclick="closeEditModal()" class="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-600 font-bold rounded-xl text-xs transition">취소</button>
+        <button onclick="submitEditModal()" class="px-4 py-2 bg-pink-400 hover:bg-pink-500 text-white font-bold rounded-xl text-xs transition shadow-xs">저장하기</button>
+      </div>
+    </div>
+  </div>
 
-            sceneBlocks.forEach((block, index) => {
-                const time = block.querySelector('.meta-time').value.trim();
-                const place = block.querySelector('.meta-place').value.trim();
-                const chars = block.querySelector('.meta-chars').value.trim();
-                const content = block.querySelector('.scene-content').value.trim();
+  <!-- D-day 관리 전용 모달창 -->
+  <div id="ddayModal" class="fixed inset-0 bg-black/40 backdrop-blur-xs flex items-center justify-center hidden z-50 p-4">
+    <div class="bg-white rounded-3xl p-6 w-full max-w-lg shadow-2xl border border-[#F2ECE1] space-y-4">
+      <div class="flex items-center justify-between border-b border-[#F2ECE1] pb-3">
+        <h3 class="font-bold text-base text-[#433B32]">🎯 D-Day 관리</h3>
+        <button onclick="toggleDdayModal(false)" class="text-gray-400 hover:text-rose-500 font-bold p-1 text-lg">✕</button>
+      </div>
 
-                scenes.push({ sceneNumber: index + 1, time, place, chars, content });
-            });
+      <div class="space-y-3">
+        <div class="flex gap-2 bg-[#FAF6F0] p-3 rounded-2xl border border-[#ECE4D5]">
+          <input type="text" id="newDdayTitle" placeholder="D-Day 이름..." class="flex-1 bg-white rounded-xl px-3 py-2 text-xs border border-[#E0D5C1] outline-none">
+          <input type="date" id="newDdayDate" class="bg-white rounded-xl px-2 py-2 text-xs border border-[#E0D5C1] outline-none">
+          <button onclick="addDdayItem()" class="px-3 py-2 bg-pink-400 hover:bg-pink-500 text-white font-bold rounded-xl text-xs transition">추가</button>
+        </div>
 
-            const tags = extractAutoTags(scenes);
-            const newDream = { id: Date.now(), title, date, category, scenes, tags };
-            
-            dreams.unshift(newDream);
-            syncStorage();
-            resetForm();
-            renderDreams();
-        }
+        <div id="ddayManagementList" class="space-y-2 max-h-64 overflow-y-auto pr-1"></div>
+      </div>
+    </div>
+  </div>
 
-        function resetForm() {
-            document.getElementById('dreamTitle').value = '';
-            document.getElementById('scenesContainer').innerHTML = '';
-            for (let i = 0; i < 2; i++) {
-                addSceneBlock();
-            }
-        }
+  <!-- To Do List 팝업 모달창 -->
+  <div id="todoModal" class="fixed inset-0 bg-black/40 backdrop-blur-xs flex items-center justify-center hidden z-50 p-4">
+    <div class="bg-white rounded-3xl p-6 w-full max-w-lg shadow-2xl border border-[#F2ECE1] space-y-4">
+      <div class="flex items-center justify-between border-b border-[#F2ECE1] pb-3">
+        <div class="flex items-center gap-2">
+          <span class="p-2 bg-amber-100 text-amber-700 rounded-xl text-sm font-bold">📝</span>
+          <h3 class="font-bold text-lg text-[#433B32]">간편 메모 & To Do List</h3>
+        </div>
+        <button onclick="toggleTodoModal(false)" class="text-gray-400 hover:text-rose-500 font-bold p-1 text-lg">✕</button>
+      </div>
 
-        function syncStorage() {
-            localStorage.setItem('dream_advanced_data', JSON.stringify(dreams));
-        }
+      <!-- 탭 영역 및 인라인 탭 추가 바 -->
+      <div class="space-y-2">
+        <div class="flex items-center justify-between">
+          <span class="text-xs font-bold text-[#8C7E6C]">카테고리 탭</span>
+          <button id="showAddTabBtn" onclick="toggleAddTabForm(true)" class="text-xs font-bold text-pink-600 bg-pink-50 hover:bg-pink-100 px-2.5 py-1 rounded-xl transition">+ 탭 추가</button>
+        </div>
 
-        function filterGroup(category) {
-            currentFilter = category;
-            document.querySelectorAll('.group-tab').forEach(btn => {
-                btn.classList.remove('bg-[#facc15]', 'text-[#070908]', 'font-bold');
-                btn.classList.add('bg-[#0b1411]', 'hover:bg-[#143329]', 'border', 'border-[#143329]', 'text-[#a7f3d0]');
-            });
-            event.target.classList.remove('bg-[#0b1411]', 'hover:bg-[#143329]', 'border', 'border-[#143329]', 'text-[#a7f3d0]');
-            event.target.classList.add('bg-[#facc15]', 'text-[#070908]', 'font-bold');
-            renderDreams();
-        }
+        <!-- 탭 버튼들이 나열되는 곳 -->
+        <div id="todoTabsHeader" class="flex flex-wrap items-center gap-1.5 pb-2 border-b border-[#F2ECE1]"></div>
 
-        function renderDreams() {
-            const searchTerm = document.getElementById('searchInput').value.toLowerCase();
-            const container = document.getElementById('dreamsList');
+        <!-- 탭 추가 버튼 누르면 바로 아래에 나타나는 인라인 입력 폼 -->
+        <div id="inlineAddTabForm" class="hidden flex gap-2 pt-1 pb-1">
+          <input type="text" id="inlineNewTabInput" onkeydown="if(event.key==='Enter') submitInlineAddTab()" placeholder="새로운 탭 이름 입력..." class="flex-1 bg-[#FAF6F0] rounded-xl px-3 py-1.5 text-xs border border-pink-300 outline-none font-medium">
+          <button onclick="submitInlineAddTab()" class="px-3 py-1.5 bg-pink-400 hover:bg-pink-500 text-white font-bold rounded-xl text-xs transition">저장</button>
+          <button onclick="toggleAddTabForm(false)" class="px-2.5 py-1.5 bg-gray-100 hover:bg-gray-200 text-gray-500 font-bold rounded-xl text-xs transition">취소</button>
+        </div>
+      </div>
 
-            const filtered = dreams.filter(d => {
-                const matchesCategory = currentFilter === 'all' || d.category === currentFilter;
-                const matchesSearch = d.title.toLowerCase().includes(searchTerm) || 
-                    d.scenes.some(s => s.content.toLowerCase().includes(searchTerm) || s.place.toLowerCase().includes(searchTerm) || s.chars.toLowerCase().includes(searchTerm)) ||
-                    (d.tags && d.tags.some(t => t.toLowerCase().includes(searchTerm)));
-                return matchesCategory && matchesSearch;
-            });
+      <div class="flex gap-2">
+        <input type="text" id="quickTodoInput" onkeydown="if(event.key==='Enter') addQuickTodo()" placeholder="현재 탭에 할 일을 적으세요..." class="flex-1 bg-[#FAF6F0] rounded-xl px-3 py-2 text-sm border border-[#ECE4D5] outline-none">
+        <button onclick="addQuickTodo()" class="px-4 py-2 bg-pink-400 hover:bg-pink-500 text-white font-bold rounded-xl text-xs transition">추가</button>
+      </div>
 
-            if (filtered.length === 0) {
-                container.innerHTML = `
-                    <div class="text-center py-12 text-[#4e7967] text-xs bg-[#0b1411] border border-[#143329] rounded-2xl">
-                        저장된 꿈 기록이 없습니다.
-                    </div>
-                `;
-                return;
-            }
+      <div id="quickTodoList" class="space-y-2 max-h-64 overflow-y-auto pr-1"></div>
+    </div>
+  </div>
 
-            container.innerHTML = filtered.map(d => `
-                <div id="dream-card-${d.id}" class="bg-[#0b1411] border border-[#143329] rounded-3xl p-5 space-y-4 shadow-xl">
-                    <div class="flex justify-between items-start gap-2 border-b border-[#143329]/60 pb-3">
-                        <div class="space-y-1">
-                            <div class="flex items-center gap-1.5">
-                                <span class="text-[10px] px-2 py-0.5 rounded-lg bg-[#143329] text-[#4ade80] font-bold">${d.category}</span>
-                                <span class="text-[10px] text-[#4e7967]">${d.date}</span>
-                            </div>
-                            <h3 class="text-base font-extrabold text-[#ecfdf5]">${escapeHtml(d.title)}</h3>
-                        </div>
-                        <div class="flex flex-wrap gap-1 justify-end max-w-[150px]">
-                            <button onclick="exportToTxt(${d.id})" class="text-[10px] bg-[#143329] hover:bg-[#1b4332] text-[#4ade80] px-2.5 py-1 rounded-lg transition font-medium">메모</button>
-                            <button onclick="exportToPng(${d.id})" class="text-[10px] bg-[#143329] hover:bg-[#1b4332] text-[#facc15] px-2.5 py-1 rounded-lg transition font-medium">이미지</button>
-                            <button onclick="copyDreamToVibeCode(${d.id})" class="text-[10px] bg-[#143329] hover:bg-[#1b4332] text-[#38bdf8] px-2.5 py-1 rounded-lg transition font-medium">코드</button>
-                            <button onclick="deleteDream(${d.id})" class="text-[10px] text-[#f87171] hover:bg-[#f87171]/10 px-2 py-1 rounded-lg transition">삭제</button>
-                        </div>
-                    </div>
+  <!-- Circular Routine 모달창 -->
+  <div id="routineModal" class="fixed inset-0 bg-black/40 backdrop-blur-xs flex items-center justify-center hidden z-50 p-4">
+    <div class="bg-white rounded-3xl p-6 w-full max-w-3xl max-h-[90vh] overflow-y-auto shadow-2xl border border-[#F2ECE1] space-y-5">
+      <div class="flex items-center justify-between border-b border-[#F2ECE1] pb-3">
+        <div class="flex items-center gap-2">
+          <span class="p-2 bg-rose-100 text-rose-600 rounded-xl text-sm font-bold">🍩</span>
+          <div>
+            <h3 class="font-bold text-lg text-[#433B32]">Circular Routine</h3>
+            <p class="text-[11px] text-gray-400">위쪽이 00:00, 아래쪽이 12:00 기준입니다. 조각을 마우스로 잡고 돌려 원하는 시간대로 이동하세요!</p>
+          </div>
+        </div>
+        <button onclick="toggleRoutineModal(false)" class="text-gray-400 hover:text-rose-500 font-bold p-1 text-lg">✕</button>
+      </div>
 
-                    <!-- 타임라인 시각화 흐름도 뷰 -->
-                    <div class="bg-[#060a09] border border-[#143329]/70 rounded-2xl p-3.5 space-y-2.5">
-                        <div class="text-[11px] font-bold text-[#facc15] flex items-center gap-1">
-                            <span>🗺️</span> 타임라인 흐름도
-                        </div>
-                        <div class="flex items-center gap-2 overflow-x-auto pb-1 no-scrollbar">
-                            ${d.scenes.map((s, idx) => `
-                                <div class="flex items-center gap-2 shrink-0">
-                                    <div class="bg-[#0b1411] border border-[#143329] rounded-xl p-2.5 min-w-[120px] space-y-1">
-                                        <div class="text-[10px] font-bold text-[#4ade80]">#장면 ${s.sceneNumber}</div>
-                                        <div class="text-[10px] text-[#a7f3d0] truncate">📍 ${escapeHtml(s.place || '미지')}</div>
-                                        <div class="text-[10px] text-[#6b9c87] truncate">👤 ${escapeHtml(s.chars || '혼자')}</div>
-                                    </div>
-                                    ${idx < d.scenes.length - 1 ? `<span class="text-[#4e7967] font-bold">→</span>` : ''}
-                                </div>
-                            `).join('')}
-                        </div>
-                    </div>
+      <div class="space-y-2 bg-[#FAF6F0] p-4 rounded-2xl border border-[#ECE4D5]">
+        <div class="flex items-center justify-between">
+          <span class="text-xs font-bold text-[#6B6152]">⚡ 타임 버퍼 퀵 추가</span>
+          <span class="text-[10px] text-[#8C7E6C]">버튼을 누르면 비어있는 시간대에 블록이 자동 생성됩니다</span>
+        </div>
 
-                    <!-- 자동 추출된 해시태그 -->
-                    ${d.tags && d.tags.length > 0 ? `
-                        <div class="flex flex-wrap gap-1.5 pt-1">
-                            ${d.tags.map(t => `<span class="text-[10px] bg-[#060a09] border border-[#143329] text-[#a7f3d0] px-2.5 py-0.5 rounded-lg">#${t}</span>`).join('')}
-                        </div>
-                    ` : ''}
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
+          <div class="bg-white p-2 rounded-xl border border-[#E0D5C1] flex flex-col items-center gap-1.5 shadow-xs">
+            <span class="text-xs font-bold text-indigo-600">수면 🌙</span>
+            <div class="flex items-center gap-1">
+              <button onclick="adjustQuickMinutes('sleep', -10)" class="w-5 h-5 bg-gray-100 hover:bg-gray-200 text-xs rounded font-bold">-</button>
+              <input type="number" id="quickMinutes_sleep" value="60" min="10" step="10" class="w-12 text-center text-xs font-bold font-coding outline-none border-b border-gray-200">
+              <span class="text-[10px] text-gray-400">분</span>
+              <button onclick="adjustQuickMinutes('sleep', 10)" class="w-5 h-5 bg-gray-100 hover:bg-gray-200 text-xs rounded font-bold">+</button>
+            </div>
+            <button onclick="addQuickRoutineItem('수면 🌙', 'sleep', '#818cf8')" class="w-full mt-1 py-1 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 text-[11px] font-bold rounded-lg transition">+ 추가</button>
+          </div>
 
-                    <!-- Scenes Details View -->
-                    <div class="space-y-2.5 pt-1">
-                        ${d.scenes.map(s => `
-                            <div class="bg-[#060a09] border border-[#143329]/70 rounded-2xl p-3.5 space-y-1.5">
-                                <div class="text-[11px] text-[#facc15] font-bold">장면 #${s.sceneNumber}</div>
-                                <div class="flex flex-wrap gap-1 text-[10px]">
-                                    ${s.time ? `<span class="bg-[#0b1411] text-[#a7f3d0] px-2 py-0.5 rounded-lg border border-[#143329]">시간대 : ${escapeHtml(s.time)}</span>` : ''}
-                                    ${s.place ? `<span class="bg-[#0b1411] text-[#a7f3d0] px-2 py-0.5 rounded-lg border border-[#143329]">장소 : ${escapeHtml(s.place)}</span>` : ''}
-                                    ${s.chars ? `<span class="bg-[#0b1411] text-[#a7f3d0] px-2 py-0.5 rounded-lg border border-[#143329]">등장인물 : ${escapeHtml(s.chars)}</span>` : ''}
-                                </div>
-                                <p class="text-xs text-[#a7f3d0] whitespace-pre-wrap leading-relaxed pt-1"><strong class="text-[#ecfdf5]">내용 :</strong> ${escapeHtml(s.content || '내용 없음')}</p>
-                            </div>
-                        `).join('')}
-                    </div>
-                </div>
-            `).join('');
-        }
+          <div class="bg-white p-2 rounded-xl border border-[#E0D5C1] flex flex-col items-center gap-1.5 shadow-xs">
+            <span class="text-xs font-bold text-amber-600">식사 🍚</span>
+            <div class="flex items-center gap-1">
+              <button onclick="adjustQuickMinutes('meal', -10)" class="w-5 h-5 bg-gray-100 hover:bg-gray-200 text-xs rounded font-bold">-</button>
+              <input type="number" id="quickMinutes_meal" value="60" min="10" step="10" class="w-12 text-center text-xs font-bold font-coding outline-none border-b border-gray-200">
+              <span class="text-[10px] text-gray-400">분</span>
+              <button onclick="adjustQuickMinutes('meal', 10)" class="w-5 h-5 bg-gray-100 hover:bg-gray-200 text-xs rounded font-bold">+</button>
+            </div>
+            <button onclick="addQuickRoutineItem('식사 🍚', 'meal', '#f59e0b')" class="w-full mt-1 py-1 bg-amber-50 hover:bg-amber-100 text-amber-700 text-[11px] font-bold rounded-lg transition">+ 추가</button>
+          </div>
 
-        function deleteDream(id) {
-            if (confirm("이 꿈 기록을 삭제하시겠습니까?")) {
-                dreams = dreams.filter(d => d.id !== id);
-                syncStorage();
-                renderDreams();
-            }
-        }
+          <div class="bg-white p-2 rounded-xl border border-[#E0D5C1] flex flex-col items-center gap-1.5 shadow-xs">
+            <span class="text-xs font-bold text-sky-600">이동 🚌</span>
+            <div class="flex items-center gap-1">
+              <button onclick="adjustQuickMinutes('commute', -10)" class="w-5 h-5 bg-gray-100 hover:bg-gray-200 text-xs rounded font-bold">-</button>
+              <input type="number" id="quickMinutes_commute" value="30" min="10" step="10" class="w-12 text-center text-xs font-bold font-coding outline-none border-b border-gray-200">
+              <span class="text-[10px] text-gray-400">분</span>
+              <button onclick="adjustQuickMinutes('commute', 10)" class="w-5 h-5 bg-gray-100 hover:bg-gray-200 text-xs rounded font-bold">+</button>
+            </div>
+            <button onclick="addQuickRoutineItem('이동 🚌', 'commute', '#0ea5e9')" class="w-full mt-1 py-1 bg-sky-50 hover:bg-sky-100 text-sky-700 text-[11px] font-bold rounded-lg transition">+ 추가</button>
+          </div>
 
-        function formatDateWithDay(dateString) {
-            if (!dateString) return '';
-            const date = new Date(dateString);
-            const days = ['일', '월', '화', '수', '목', '금', '토'];
-            const year = date.getFullYear();
-            const month = String(date.getMonth() + 1).padStart(2, '0');
-            const day = String(date.getDate()).padStart(2, '0');
-            const dayOfWeek = days[date.getDay()];
-            return `${year}.${month}.${day}(${dayOfWeek})`;
-        }
+          <div class="bg-white p-2 rounded-xl border border-[#E0D5C1] flex flex-col items-center gap-1.5 shadow-xs">
+            <span class="text-xs font-bold text-emerald-600">휴식 ☕</span>
+            <div class="flex items-center gap-1">
+              <button onclick="adjustQuickMinutes('rest', -10)" class="w-5 h-5 bg-gray-100 hover:bg-gray-200 text-xs rounded font-bold">-</button>
+              <input type="number" id="quickMinutes_rest" value="30" min="10" step="10" class="w-12 text-center text-xs font-bold font-coding outline-none border-b border-gray-200">
+              <span class="text-[10px] text-gray-400">분</span>
+              <button onclick="adjustQuickMinutes('rest', 10)" class="w-5 h-5 bg-gray-100 hover:bg-gray-200 text-xs rounded font-bold">+</button>
+            </div>
+            <button onclick="addQuickRoutineItem('휴식 ☕', 'rest', '#10b981')" class="w-full mt-1 py-1 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 text-[11px] font-bold rounded-lg transition">+ 추가</button>
+          </div>
+        </div>
 
-        function exportToTxt(id) {
-            const dream = dreams.find(d => d.id === id);
-            if (!dream) return;
+        <div class="flex flex-wrap items-center gap-2 pt-2 border-t border-[#ECE4D5]">
+          <input type="text" id="customRoutineTitle" placeholder="일정 이름 (예: 집중 작업, 드로잉)" class="flex-1 min-w-[150px] bg-white rounded-xl px-3 py-1.5 text-xs border border-[#E0D5C1] outline-none">
+          <div class="flex items-center gap-1 bg-white px-2 py-1 rounded-xl border border-[#E0D5C1]">
+            <span class="text-[11px] text-gray-400 font-medium">시작</span>
+            <input type="text" id="customRoutineStart" value="14:00" placeholder="14:00" class="w-14 text-center text-xs font-bold font-coding outline-none">
+          </div>
+          <div class="flex items-center gap-1 bg-white px-2 py-1 rounded-xl border border-[#E0D5C1]">
+            <span class="text-[11px] text-gray-400 font-medium">시간</span>
+            <input type="number" id="customRoutineMinutes" value="60" min="10" step="10" class="w-12 bg-transparent text-center text-xs font-bold font-coding outline-none">
+            <span class="text-xs text-[#8C7E6C]">분</span>
+          </div>
+          <button onclick="addCustomRoutineItem()" class="px-3 py-1.5 bg-pink-400 hover:bg-pink-500 text-white font-bold text-xs rounded-xl shadow-xs transition">직접 추가</button>
+        </div>
+      </div>
 
-            const formattedDate = formatDateWithDay(dream.date);
+      <div class="grid md:grid-cols-2 gap-6 items-start">
+        <div class="flex flex-col items-center justify-center p-3 bg-[#FFFDF9] rounded-2xl border border-[#F2ECE1]">
+          <div class="relative w-[300px] h-[300px]">
+            <svg id="routineSvg" viewBox="0 0 300 300" class="w-full h-full drop-shadow-sm select-none"></svg>
+            <span class="absolute top-1 left-1/2 -translate-x-1/2 text-[11px] font-bold font-coding text-indigo-600 bg-white/95 px-2 py-0.5 rounded shadow-xs">00:00</span>
+            <span class="absolute bottom-1 left-1/2 -translate-x-1/2 text-[11px] font-bold font-coding text-rose-500 bg-white/95 px-2 py-0.5 rounded shadow-xs">12:00</span>
+            <span class="absolute right-1 top-1/2 -translate-y-1/2 text-[11px] font-bold font-coding text-gray-500 bg-white/95 px-1.5 py-0.5 rounded">06:00</span>
+            <span class="absolute left-1 top-1/2 -translate-y-1/2 text-[11px] font-bold font-coding text-gray-500 bg-white/95 px-1.5 py-0.5 rounded">18:00</span>
+          </div>
+          <span class="text-[11px] text-gray-400 mt-2">
+            총 배정: <strong id="routineTotalHours" class="text-pink-600 font-coding">0h 0m</strong>
+            <span class="text-[10px] text-amber-600 ml-1 font-bold">(💡 부채꼴 조각을 드래그해 시작 시간 회전)</span>
+          </span>
+        </div>
 
-            let textContent = `제목 : ${dream.title}\n`;
-            textContent += `일자 : ${formattedDate}\n`;
-            textContent += `장르 : ${dream.category}\n`;
-            textContent += `----------------------------------------\n`;
+        <div class="h-full flex flex-col justify-start space-y-2">
+          <div class="flex items-center justify-between pb-1">
+            <h4 class="text-xs font-bold text-[#433B32]">📋 시간순 일정 (시간 직접 변경 가능)</h4>
+            <button onclick="syncCalendarTasksToRoutine()" class="text-[10px] text-pink-600 underline font-bold">달력 일정 불러오기</button>
+          </div>
+          <div id="routineItemList" class="space-y-2 max-h-[300px] overflow-y-auto pr-1"></div>
+        </div>
+      </div>
+    </div>
+  </div>
 
-            dream.scenes.forEach((s, index) => {
-                textContent += `장면#${s.sceneNumber}\n`;
-                textContent += `시간대 : ${s.time || '없음'}\n`;
-                textContent += `장소 : ${s.place || '없음'}\n`;
-                textContent += `등장인물 : ${s.chars || '없음'}\n`;
-                textContent += `내용 : ${s.content || '내용 없음'}\n`;
-                
-                if (index < dream.scenes.length - 1) {
-                    textContent += `----------------------------------------\n`;
-                }
-            });
+  <script>
+    const realToday = new Date();
+    const realTodayStr = `${realToday.getFullYear()}-${String(realToday.getMonth() + 1).padStart(2, '0')}-${String(realToday.getDate()).padStart(2, '0')}`;
 
-            const blob = new Blob([textContent], { type: 'text/plain;charset=utf-8' });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            const safeTitle = dream.title.replace(/[\/\\?%*:|"<>]/g, '_');
-            a.download = `${safeTitle}.txt`;
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
-            URL.revokeObjectURL(url);
-        }
+    let currentYear = realToday.getFullYear();
+    let currentMonth = realToday.getMonth() + 1;
+    let selectedDate = realTodayStr;
 
-        function exportToPng(id) {
-            const dream = dreams.find(d => d.id === id);
-            const cardElement = document.getElementById(`dream-card-${id}`);
-            if (!cardElement || !dream) return;
+    let draggedTaskId = null;
+    let draggedTodoId = null;
+    let draggedTabId = null;
 
-            const buttons = cardElement.querySelector('.flex.flex-wrap');
-            if (buttons) buttons.style.display = 'none';
+    let appTitle = localStorage.getItem('cozy_app_title') || 'Hello World!';
+    let calIcon = localStorage.getItem('cozy_cal_icon') || '📅';
+    let calMotto = localStorage.getItem('cozy_cal_motto') || '';
 
-            html2canvas(cardElement, {
-                scale: 2,
-                backgroundColor: '#070908'
-            }).then(canvas => {
-                if (buttons) buttons.style.display = 'flex';
-                
-                const image = canvas.toDataURL('image/png');
-                const a = document.createElement('a');
-                a.href = image;
-                const safeTitle = dream.title.replace(/[\/\\?%*:|"<>]/g, '_');
-                a.download = `${safeTitle}.png`;
-                document.body.appendChild(a);
-                a.click();
-                document.body.removeChild(a);
-            }).catch(err => {
-                if (buttons) buttons.style.display = 'flex';
-                alert("이미지 저장 중 오류가 발생했습니다.");
-            });
-        }
+    let ddayList = JSON.parse(localStorage.getItem('cozy_dday_list')) || [
+      { id: 'd1', title: '포트폴리오 제출', date: '2026-09-30' },
+      { id: 'd2', title: '팀 프로젝트 마감', date: '2026-10-15' },
+      { id: 'd3', title: '자격증 시험', date: '2026-11-05' }
+    ];
 
-        function copyDreamToVibeCode(id) {
-            const dream = dreams.find(d => d.id === id);
-            if (!dream) return;
+    let activeEditMode = null;
+    let activeEditTargetKey = null;
 
-            const scenesText = dream.scenes.map(s => `
-    // Scene ${s.sceneNumber}
-    {
-        time: "${s.time}",
-        place: "${s.place}",
-        characters: "${s.chars}",
-        description: \`${s.content}\`
-    }`).join(',');
+    function openEditModal(mode, targetKey, currentVal) {
+      activeEditMode = mode;
+      activeEditTargetKey = targetKey;
+      
+      const modal = document.getElementById('editModal');
+      const titleEl = document.getElementById('editModalTitle');
+      const inputEl = document.getElementById('editModalInput');
 
-            const vibeFormat = `// ==========================================
-// VIBE CODING: TIMELINE DREAM SPECIFICATION
-// ==========================================
-/*
-  Title: ${dream.title}
-  Date: ${dream.date}
-  Genre: ${dream.category}
-*/
+      inputEl.value = currentVal || '';
 
-class ${dream.title.replace(/[^a-zA-Z0-9]/g, '') || 'DreamSequence'} {
-    constructor() {
-        this.timelineScenes = [${scenesText}
-        ];
-        this.status = "CONCEPT_READY";
+      if (mode === 'goal') {
+        titleEl.innerText = targetKey === 'mustDo' ? '이 달에 꼭 해야 할 일 추가' : '하고 싶은 일 추가';
+        inputEl.placeholder = '목표 내용을 적어보세요...';
+      } else if (mode === 'goalEdit') {
+        titleEl.innerText = '목표 수정';
+        inputEl.placeholder = '수정할 목표 내용을 적어보세요...';
+      } else if (mode === 'taskTitle') {
+        titleEl.innerText = '할 일 이름 수정';
+        inputEl.placeholder = '태스크 제목을 적어보세요...';
+      } else if (mode === 'taskDuration') {
+        titleEl.innerText = '예상 시간 수정';
+        inputEl.placeholder = '예: 01:30 또는 2';
+      } else if (mode === 'customTimeTitle') {
+        titleEl.innerText = '일정 이름 수정';
+        inputEl.placeholder = '일정 이름을 적어보세요...';
+      } else if (mode === 'quickTodo') {
+        titleEl.innerText = '할 일 수정';
+        inputEl.placeholder = '할 일 내용을 적어보세요...';
+      }
+
+      modal.classList.remove('hidden');
+      inputEl.focus();
+      inputEl.select();
     }
-}
-export default new ${dream.title.replace(/[^a-zA-Z0-9]/g, '') || 'DreamSequence'}();`;
 
-            navigator.clipboard.writeText(vibeFormat).then(() => {
-                alert("클립보드에 바이브 코드가 복사되었습니다!");
-            });
+    function closeEditModal() {
+      document.getElementById('editModal').classList.add('hidden');
+      activeEditMode = null;
+      activeEditTargetKey = null;
+    }
+
+    function submitEditModal() {
+      const val = document.getElementById('editModalInput').value.trim();
+      if (!val && activeEditMode !== 'goal') return;
+
+      if (activeEditMode === 'goal') {
+        monthlyGoals[activeEditTargetKey].push({ id: 'g_' + Date.now(), text: val, done: false });
+        saveAll();
+        renderGoals();
+      } else if (activeEditMode === 'goalEdit') {
+        const target = monthlyGoals[activeEditTargetKey.type].find(g => g.id === activeEditTargetKey.id);
+        if (target) { target.text = val; saveAll(); renderGoals(); }
+      } else if (activeEditMode === 'taskTitle') {
+        const target = tasks.find(t => t.id === activeEditTargetKey);
+        if (target) {
+          target.title = val;
+          if (dailyTimeBudgets[target.date]) {
+            const autoItem = dailyTimeBudgets[target.date].customTimes.find(c => c.id === 'auto_' + target.id);
+            if (autoItem) autoItem.title = val;
+          }
+          saveAll();
+          renderAll();
+        }
+      } else if (activeEditMode === 'taskDuration') {
+        let dur = val;
+        if (!dur.includes(':')) dur = hoursToTimeString(parseFloat(dur) || 1);
+        const target = tasks.find(t => t.id === activeEditTargetKey);
+        if (target) {
+          target.duration = dur;
+          if (dailyTimeBudgets[target.date]) {
+            const autoItem = dailyTimeBudgets[target.date].customTimes.find(c => c.id === 'auto_' + target.id);
+            if (autoItem) autoItem.rawHoursStr = dur;
+          }
+          saveAll();
+          renderAll();
+        }
+      } else if (activeEditMode === 'customTimeTitle') {
+        ensureCurrentDayBudget();
+        const target = dailyTimeBudgets[selectedDate].customTimes.find(c => c.id === activeEditTargetKey);
+        if (target) {
+          target.title = val;
+          if (activeEditTargetKey.startsWith('auto_')) {
+            const taskId = activeEditTargetKey.replace('auto_', '');
+            const t = tasks.find(task => task.id === taskId);
+            if (t) t.title = val;
+          }
+          saveAll();
+          renderAll();
+        }
+      } else if (activeEditMode === 'quickTodo') {
+        const target = quickTodos.find(t => t.id === activeEditTargetKey);
+        if (target) { target.text = val; saveAll(); renderQuickTodos(); }
+      }
+
+      closeEditModal();
+    }
+
+    // 탭 데이터 선언 및 초기화 (오류 방지를 위해 상단 배치)
+    let todoTabs = JSON.parse(localStorage.getItem('cozy_todo_tabs'));
+    if (!todoTabs || todoTabs.length === 0) {
+      todoTabs = [
+        { id: 'tab_default', name: '기본 탭' },
+        { id: 'tab_project', name: '프로젝트' }
+      ];
+    }
+    let currentTodoTabId = localStorage.getItem('cozy_current_todo_tab') || todoTabs[0].id;
+
+    function toggleTodoModal(open) {
+      const modal = document.getElementById('todoModal');
+      if (open) {
+        modal.classList.remove('hidden');
+        toggleAddTabForm(false);
+        renderTodoTabs();
+        renderQuickTodos();
+      } else {
+        modal.classList.add('hidden');
+      }
+    }
+
+    function toggleAddTabForm(show) {
+      const form = document.getElementById('inlineAddTabForm');
+      const btn = document.getElementById('showAddTabBtn');
+      const input = document.getElementById('inlineNewTabInput');
+      if (show) {
+        form.classList.remove('hidden');
+        btn.classList.add('hidden');
+        input.value = '';
+        input.focus();
+      } else {
+        form.classList.add('hidden');
+        btn.classList.remove('hidden');
+      }
+    }
+
+    function submitInlineAddTab() {
+      const input = document.getElementById('inlineNewTabInput');
+      const name = input.value.trim();
+      if (!name) return;
+
+      const newTab = { id: 'tab_' + Date.now(), name };
+      todoTabs.push(newTab);
+      currentTodoTabId = newTab.id;
+      saveAll();
+      renderTodoTabs();
+      renderQuickTodos();
+      toggleAddTabForm(false);
+    }
+
+    function renderTodoTabs() {
+      const headerEl = document.getElementById('todoTabsHeader');
+      headerEl.innerHTML = '';
+
+      if (!todoTabs.some(t => t.id === currentTodoTabId) && todoTabs.length > 0) {
+        currentTodoTabId = todoTabs[0].id;
+      }
+
+      todoTabs.forEach(tab => {
+        const isSelected = (tab.id === currentTodoTabId);
+        const btn = document.createElement('div');
+        btn.draggable = true;
+        btn.ondragstart = (e) => {
+          draggedTabId = tab.id;
+          e.dataTransfer.setData('text/plain', tab.id);
+        };
+        btn.ondragover = (e) => e.preventDefault();
+        btn.ondrop = (e) => {
+          e.preventDefault();
+          if (!draggedTabId || draggedTabId === tab.id) return;
+          const fromIdx = todoTabs.findIndex(t => t.id === draggedTabId);
+          const toIdx = todoTabs.findIndex(t => t.id === tab.id);
+          if (fromIdx !== -1 && toIdx !== -1) {
+            const moved = todoTabs.splice(fromIdx, 1)[0];
+            todoTabs.splice(toIdx, 0, moved);
+            saveAll();
+            renderTodoTabs();
+          }
+          draggedTabId = null;
+        };
+
+        btn.className = `flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition cursor-pointer select-none ${
+          isSelected 
+            ? 'bg-pink-400 text-white shadow-2xs' 
+            : 'bg-[#FAF6F0] text-[#6B6152] hover:bg-[#F2ECE1]'
+        }`;
+
+        // 연필 아이콘 클릭 시 prompt를 통해 그 자리에서 즉시 수정 후 실시간 반영
+        btn.innerHTML = `
+          <span onclick="switchTodoTab('${tab.id}')" class="truncate">${tab.name}</span>
+          <button onclick="event.stopPropagation(); editTodoTabInline('${tab.id}')" title="탭 이름 수정" class="opacity-70 hover:opacity-100 text-[10px]">✏️</button>
+          ${todoTabs.length > 1 ? `<button onclick="event.stopPropagation(); deleteTodoTab('${tab.id}')" title="탭 삭제" class="opacity-70 hover:opacity-100 text-[10px]">✕</button>` : ''}
+        `;
+        headerEl.appendChild(btn);
+      });
+    }
+
+    function editTodoTabInline(tabId) {
+      const tab = todoTabs.find(t => t.id === tabId);
+      if (!tab) return;
+      const newName = prompt("탭 이름을 수정하세요:", tab.name);
+      if (newName !== null && newName.trim() !== '') {
+        tab.name = newName.trim();
+        saveAll();
+        renderTodoTabs(); // 즉시 화면에 반영
+      }
+    }
+
+    function switchTodoTab(tabId) {
+      currentTodoTabId = tabId;
+      saveAll();
+      renderTodoTabs();
+      renderQuickTodos();
+    }
+
+    function deleteTodoTab(tabId) {
+      if (todoTabs.length <= 1) {
+        alert("최소 1개의 탭은 유지되어야 합니다.");
+        return;
+      }
+      const confirmed = confirm("이 탭과 포함된 모든 할 일이 삭제됩니다. 삭제하시겠습니까?");
+      if (!confirmed) return;
+
+      todoTabs = todoTabs.filter(t => t.id !== tabId);
+      quickTodos = quickTodos.filter(t => t.tabId !== tabId);
+      if (currentTodoTabId === tabId) {
+        currentTodoTabId = todoTabs[0].id;
+      }
+      saveAll();
+      renderTodoTabs();
+      renderQuickTodos();
+    }
+
+    function handleTodoDragStart(e, id) {
+      draggedTodoId = id;
+      e.dataTransfer.setData('text/plain', id);
+      e.stopPropagation();
+    }
+
+    function handleTodoDrop(e, targetId) {
+      e.preventDefault();
+      e.stopPropagation();
+      if (!draggedTodoId || draggedTodoId === targetId) return;
+
+      const tabTodos = quickTodos.filter(t => t.tabId === currentTodoTabId);
+      const otherTodos = quickTodos.filter(t => t.tabId !== currentTodoTabId);
+
+      const draggedItem = tabTodos.find(t => t.id === draggedTodoId);
+      if (!draggedItem) return;
+
+      const rect = e.currentTarget.getBoundingClientRect();
+      const insertAfter = (e.clientY - rect.top) > (rect.height / 2);
+
+      let newTabTodos = tabTodos.filter(t => t.id !== draggedTodoId);
+      const targetIndex = newTabTodos.findIndex(t => t.id === targetId);
+
+      if (targetIndex !== -1) {
+        newTabTodos.splice(insertAfter ? targetIndex + 1 : targetIndex, 0, draggedItem);
+      } else {
+        newTabTodos.push(draggedItem);
+      }
+
+      quickTodos = [...otherTodos, ...newTabTodos];
+      draggedTodoId = null;
+      saveAll();
+      renderQuickTodos();
+    }
+
+    function renderQuickTodos() {
+      const listEl = document.getElementById('quickTodoList');
+      listEl.innerHTML = '';
+
+      const tabTodos = quickTodos.filter(t => t.tabId === currentTodoTabId);
+
+      if (tabTodos.length === 0) {
+        listEl.innerHTML = `<div class="text-center py-6 text-xs text-gray-400">등록된 할 일이 없습니다. 새로운 할 일을 추가해보세요! ✨</div>`;
+        return;
+      }
+
+      tabTodos.forEach(item => {
+        const div = document.createElement('div');
+        div.draggable = true;
+        div.ondragstart = (e) => handleTodoDragStart(e, item.id);
+        div.ondragover = (e) => e.preventDefault();
+        div.ondrop = (e) => handleTodoDrop(e, item.id);
+
+        div.className = "flex items-center justify-between gap-2 p-2.5 rounded-xl bg-[#FAF6F0] border border-[#ECE4D5] hover:border-pink-300 cursor-grab active:cursor-grabbing transition";
+        div.innerHTML = `
+          <div class="flex items-center gap-2 flex-1 overflow-hidden">
+            <input type="checkbox" ${item.done ? 'checked' : ''} onchange="toggleQuickTodo('${item.id}')" class="rounded text-pink-500 w-4 h-4 cursor-pointer shrink-0">
+            <span class="text-xs truncate flex-1 ${item.done ? 'line-through text-gray-400' : 'text-[#433B32]'}" ondblclick="openEditModal('quickTodo', '${item.id}', '${item.text}')" title="더블클릭하여 수정">${item.text}</span>
+          </div>
+          <div class="flex items-center gap-1 shrink-0">
+            <button onclick="openEditModal('quickTodo', '${item.id}', '${item.text}')" title="수정" class="text-gray-300 hover:text-pink-500 text-xs p-1">✏️</button>
+            <button onclick="deleteQuickTodo('${item.id}')" title="삭제" class="text-gray-300 hover:text-rose-500 p-1 text-xs">✕</button>
+          </div>
+        `;
+        listEl.appendChild(div);
+      });
+    }
+
+    function addQuickTodo() {
+      const input = document.getElementById('quickTodoInput');
+      const text = input.value.trim();
+      if (!text) return;
+      quickTodos.push({ id: 'q_' + Date.now(), tabId: currentTodoTabId, text, done: false });
+      input.value = '';
+      saveAll();
+      renderQuickTodos();
+    }
+
+    function toggleQuickTodo(id) {
+      quickTodos = quickTodos.map(t => t.id === id ? { ...t, done: !t.done } : t);
+      saveAll();
+      renderQuickTodos();
+    }
+
+    function deleteQuickTodo(id) {
+      quickTodos = quickTodos.filter(t => t.id !== id);
+      saveAll();
+      renderQuickTodos();
+    }
+
+    function renderDdays() {
+      const container = document.getElementById('ddayContainer');
+      const managementList = document.getElementById('ddayManagementList');
+      container.innerHTML = '';
+      if (managementList) managementList.innerHTML = '';
+
+      const todayObj = new Date();
+      todayObj.setHours(0,0,0,0);
+
+      ddayList.sort((a, b) => {
+        const diffA = new Date(a.date) - todayObj;
+        const diffB = new Date(b.date) - todayObj;
+        return diffA - diffB;
+      });
+
+      ddayList.forEach(item => {
+        const targetObj = new Date(item.date);
+        targetObj.setHours(0,0,0,0);
+        const diffTime = targetObj - todayObj;
+        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+        let badgeText = '';
+        let badgeColor = 'bg-amber-50 text-amber-700 border-amber-200';
+        if (diffDays === 0) {
+          badgeText = 'D-DAY 🔥';
+          badgeColor = 'bg-rose-100 text-rose-700 border-rose-300 font-extrabold';
+        } else if (diffDays > 0) {
+          badgeText = `D-${diffDays}`;
+          badgeColor = 'bg-pink-50 text-pink-600 border-pink-200';
+        } else {
+          badgeText = `D+${Math.abs(diffDays)}`;
+          badgeColor = 'bg-gray-100 text-gray-500 border-gray-200';
         }
 
-        function exportData() {
-            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(dreams, null, 2));
-            const dlAnchor = document.createElement('a');
-            dlAnchor.setAttribute("href", dataStr);
-            dlAnchor.setAttribute("download", `dream_advanced_${new Date().toISOString().slice(0,10)}.json`);
-            document.body.appendChild(dlAnchor);
-            dlAnchor.click();
-            dlAnchor.remove();
-        }
+        const card = document.createElement('div');
+        card.className = `p-2.5 rounded-2xl border ${badgeColor} flex items-center justify-between gap-2 shadow-2xs`;
+        card.innerHTML = `
+          <div class="truncate flex-1">
+            <p class="text-[10px] text-gray-400 font-coding">${item.date}</p>
+            <p class="text-xs font-bold truncate text-[#433B32]">${item.title}</p>
+          </div>
+          <span class="text-xs font-extrabold font-coding px-2 py-0.5 rounded-xl bg-white shadow-2xs shrink-0">${badgeText}</span>
+        `;
+        container.appendChild(card);
 
-        function importData(event) {
-            const file = event.target.files[0];
-            if (!file) return;
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                try {
-                    const imported = JSON.parse(e.target.result);
-                    if (Array.isArray(imported)) {
-                        dreams = imported;
-                        syncStorage();
-                        renderDreams();
-                        alert("데이터를 성공적으로 불러왔습니다!");
-                    }
-                } catch (err) {
-                    alert("잘못된 파일 형식입니다.");
-                }
-            };
-            reader.readAsText(file);
+        if (managementList) {
+          const mRow = document.createElement('div');
+          mRow.className = "flex items-center gap-2 p-2 rounded-xl bg-[#FAF6F0] border border-[#ECE4D5]";
+          mRow.innerHTML = `
+            <input type="text" value="${item.title}" onchange="updateDdayField('${item.id}', 'title', this.value)" class="flex-1 bg-white rounded-lg px-2.5 py-1.5 text-xs border border-[#E0D5C1] outline-none font-bold text-[#433B32]" title="이름 수정">
+            <input type="date" value="${item.date}" onchange="updateDdayField('${item.id}', 'date', this.value)" class="w-32 bg-white rounded-lg px-2 py-1.5 text-xs border border-[#E0D5C1] outline-none text-[#6B6152]" title="날짜 수정">
+            <button onclick="deleteDday('${item.id}')" class="text-gray-300 hover:text-rose-500 p-1 text-xs" title="삭제">✕</button>
+          `;
+          managementList.appendChild(mRow);
         }
+      });
+    }
 
-        function escapeHtml(text) {
-            if (!text) return '';
-            return text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
+    function updateDdayField(id, field, value) {
+      const target = ddayList.find(d => d.id === id);
+      if (!target || !value.trim()) return;
+      target[field] = value.trim();
+      saveAll();
+      renderDdays();
+    }
+
+    function toggleDdayModal(open) {
+      const modal = document.getElementById('ddayModal');
+      if (open) {
+        modal.classList.remove('hidden');
+        renderDdays();
+      } else {
+        modal.classList.add('hidden');
+      }
+    }
+
+    function addDdayItem() {
+      const titleInput = document.getElementById('newDdayTitle');
+      const dateInput = document.getElementById('newDdayDate');
+      const title = titleInput.value.trim();
+      const date = dateInput.value;
+
+      if (!title || !date) return alert("D-Day 이름과 날짜를 모두 입력해주세요!");
+
+      ddayList.push({ id: 'd_' + Date.now(), title, date });
+      titleInput.value = '';
+      dateInput.value = '';
+      saveAll();
+      renderDdays();
+    }
+
+    function deleteDday(id) {
+      ddayList = ddayList.filter(d => d.id !== id);
+      saveAll();
+      renderDdays();
+    }
+
+    function renderAppTitle() {
+      document.getElementById('appTitleDisplay').innerText = appTitle;
+      document.title = appTitle + " 🧸";
+    }
+
+    function enableTitleEdit() {
+      const displayEl = document.getElementById('appTitleDisplay');
+      const inputEl = document.getElementById('appTitleInput');
+      const editBtn = document.getElementById('editTitleBtn');
+      const saveBtn = document.getElementById('saveTitleBtn');
+
+      inputEl.value = appTitle;
+      displayEl.classList.add('hidden');
+      editBtn.classList.add('hidden');
+      inputEl.classList.remove('hidden');
+      saveBtn.classList.remove('hidden');
+      inputEl.focus();
+    }
+
+    function saveAppTitle() {
+      const inputEl = document.getElementById('appTitleInput');
+      const newTitle = inputEl.value.trim();
+      if (newTitle) {
+        appTitle = newTitle;
+        localStorage.setItem('cozy_app_title', appTitle);
+        renderAppTitle();
+      }
+      document.getElementById('appTitleDisplay').classList.remove('hidden');
+      document.getElementById('editTitleBtn').classList.remove('hidden');
+      document.getElementById('appTitleInput').classList.add('hidden');
+      document.getElementById('saveTitleBtn').classList.add('hidden');
+    }
+
+    function renderCalMotto() {
+      document.getElementById('calIconBtn').innerText = calIcon;
+      const displayEl = document.getElementById('calMottoDisplay');
+      
+      if (calMotto && calMotto.trim() !== '') {
+        displayEl.innerText = calMotto;
+        displayEl.className = "text-xs sm:text-sm font-bold truncate cursor-pointer py-1 px-1.5 rounded-lg hover:bg-[#FAF6F0] transition text-[#433B32]";
+      } else {
+        displayEl.innerText = "한 달 목표나 좋아하는 문구를 적어보세요!";
+        displayEl.className = "text-xs sm:text-sm font-semibold truncate cursor-pointer py-1 px-1.5 rounded-lg hover:bg-[#FAF6F0] transition text-gray-400";
+      }
+    }
+
+    function toggleIconPicker(event) {
+      event.stopPropagation();
+      const popup = document.getElementById('iconPickerPopup');
+      popup.classList.toggle('hidden');
+    }
+
+    function selectCalIcon(icon) {
+      calIcon = icon;
+      localStorage.setItem('cozy_cal_icon', calIcon);
+      document.getElementById('iconPickerPopup').classList.add('hidden');
+      renderCalMotto();
+    }
+
+    window.addEventListener('click', () => {
+      const popup = document.getElementById('iconPickerPopup');
+      if (popup) popup.classList.add('hidden');
+    });
+
+    function enableCalMottoEdit() {
+      const displayEl = document.getElementById('calMottoDisplay');
+      const inputEl = document.getElementById('calMottoInput');
+      const editBtn = document.getElementById('editCalMottoBtn');
+      const saveBtn = document.getElementById('saveCalMottoBtn');
+
+      inputEl.value = calMotto;
+      displayEl.classList.add('hidden');
+      editBtn.classList.add('hidden');
+      inputEl.classList.remove('hidden');
+      saveBtn.classList.remove('hidden');
+      inputEl.focus();
+    }
+
+    function saveCalMotto() {
+      const inputEl = document.getElementById('calMottoInput');
+      calMotto = inputEl.value.trim();
+      localStorage.setItem('cozy_cal_motto', calMotto);
+      renderCalMotto();
+
+      document.getElementById('calMottoDisplay').classList.remove('hidden');
+      document.getElementById('editCalMottoBtn').classList.remove('hidden');
+      document.getElementById('calMottoInput').classList.add('hidden');
+      document.getElementById('saveCalMottoBtn').classList.add('hidden');
+    }
+
+    function minutesToTimeString(m) {
+      m = ((m % 1440) + 1440) % 1440;
+      const h = Math.floor(m / 60);
+      const mins = Math.floor(m % 60);
+      return `${String(h).padStart(2, '0')}:${String(mins).padStart(2, '0')}`;
+    }
+
+    function timeStringToMinutes(str) {
+      if (!str) return 0;
+      const parts = str.trim().split(':');
+      if (parts.length === 2) {
+        return (parseInt(parts[0]) || 0) * 60 + (parseInt(parts[1]) || 0);
+      }
+      return (parseFloat(str) || 0) * 60;
+    }
+
+    function timeStringToHours(str) {
+      return timeStringToMinutes(str) / 60;
+    }
+
+    function hoursToTimeString(val) {
+      return minutesToTimeString(Math.round(val * 60));
+    }
+
+    let tasks = JSON.parse(localStorage.getItem('cozy_tasks')) || [
+      { id: '1', title: '포트폴리오 시안 정리 🎨', date: realTodayStr, type: 'urgent', duration: '02:00', completed: false },
+      { id: '2', title: '새로운 브러쉬 팩 테스트 🖌️', date: realTodayStr, type: 'optional', duration: '01:00', completed: false }
+    ];
+
+    let monthlyGoals = JSON.parse(localStorage.getItem('cozy_goals')) || {
+      mustDo: [{ id: 'm1', text: '매일 물 1.5L 마시기 💧', done: false }],
+      wishDo: [{ id: 'w1', text: '주말에 베이커리 투어 🥐', done: false }]
+    };
+
+    let quickTodos = JSON.parse(localStorage.getItem('cozy_quick_todos')) || [
+      { id: 'q1', tabId: todoTabs[0].id, text: '다이어리 폰트 확인하기 💻', done: true },
+      { id: 'q2', tabId: todoTabs[0].id, text: '오늘 스케줄 타임 버퍼 체크하기 ✨', done: false },
+      { id: 'q3', tabId: todoTabs[1] ? todoTabs[1].id : todoTabs[0].id, text: 'UI/UX 시안 검토하기 🎨', done: false }
+    ];
+
+    let dailyTimeBudgets = JSON.parse(localStorage.getItem('cozy_daily_budgets')) || {
+      [realTodayStr]: {
+        fixedTime: { sleep: "07:00", meal: "02:00", commute: "01:30", rest: "01:30" },
+        customTimes: [{ id: 'auto_1', title: '포트폴리오 시안 정리 🎨', rawHoursStr: "02:00" }]
+      }
+    };
+
+    let dailyRoutines = JSON.parse(localStorage.getItem('cozy_daily_routines')) || {};
+
+    function saveAll() {
+      localStorage.setItem('cozy_tasks', JSON.stringify(tasks));
+      localStorage.setItem('cozy_goals', JSON.stringify(monthlyGoals));
+      localStorage.setItem('cozy_dday_list', JSON.stringify(ddayList));
+      localStorage.setItem('cozy_todo_tabs', JSON.stringify(todoTabs));
+      localStorage.setItem('cozy_current_todo_tab', currentTodoTabId);
+      localStorage.setItem('cozy_quick_todos', JSON.stringify(quickTodos));
+      localStorage.setItem('cozy_daily_budgets', JSON.stringify(dailyTimeBudgets));
+      localStorage.setItem('cozy_daily_routines', JSON.stringify(dailyRoutines));
+    }
+
+    function confirmResetSelectedDate() {
+      if (!selectedDate) return;
+      const parts = selectedDate.split('-');
+      const y = parts[0];
+      const m = parts[1];
+      const d = parts[2];
+
+      const confirmed = confirm(`${y}년 ${m}월 ${d}일 일정을 초기화하시겠습니까?`);
+      if (!confirmed) return;
+
+      tasks = tasks.filter(t => t.date !== selectedDate);
+
+      dailyTimeBudgets[selectedDate] = {
+        fixedTime: { sleep: "07:00", meal: "02:00", commute: "01:30", rest: "01:30" },
+        customTimes: []
+      };
+
+      delete dailyRoutines[selectedDate];
+
+      saveAll();
+      renderAll();
+    }
+
+    function exportData() {
+      const exportObject = {
+        version: "5.9",
+        exportedAt: new Date().toISOString(),
+        appTitle,
+        calIcon,
+        calMotto,
+        ddayList,
+        tasks,
+        monthlyGoals,
+        todoTabs,
+        quickTodos,
+        dailyTimeBudgets,
+        dailyRoutines
+      };
+      const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(exportObject, null, 2));
+      const downloadAnchor = document.createElement('a');
+      downloadAnchor.setAttribute("href", dataStr);
+      downloadAnchor.setAttribute("download", `diary_backup_${new Date().toISOString().slice(0, 10)}.json`);
+      document.body.appendChild(downloadAnchor);
+      downloadAnchor.click();
+      downloadAnchor.remove();
+    }
+
+    function importData(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        try {
+          const parsed = JSON.parse(e.target.result);
+          if (parsed.appTitle) { appTitle = parsed.appTitle; localStorage.setItem('cozy_app_title', appTitle); renderAppTitle(); }
+          if (parsed.calIcon) { calIcon = parsed.calIcon; localStorage.setItem('cozy_cal_icon', calIcon); }
+          if (parsed.calMotto !== undefined) { calMotto = parsed.calMotto; localStorage.setItem('cozy_cal_motto', calMotto); }
+          if (parsed.ddayList) ddayList = parsed.ddayList;
+          if (parsed.tasks) tasks = parsed.tasks;
+          if (parsed.monthlyGoals) monthlyGoals = parsed.monthlyGoals;
+          if (parsed.todoTabs && parsed.todoTabs.length > 0) {
+            todoTabs = parsed.todoTabs;
+          }
+          if (parsed.quickTodos) quickTodos = parsed.quickTodos;
+          if (parsed.dailyTimeBudgets) dailyTimeBudgets = parsed.dailyTimeBudgets;
+          if (parsed.dailyRoutines) dailyRoutines = parsed.dailyRoutines;
+          
+          if (!todoTabs.some(t => t.id === currentTodoTabId) && todoTabs.length > 0) {
+            currentTodoTabId = todoTabs[0].id;
+          }
+
+          saveAll();
+          renderCalMotto();
+          renderDdays();
+          renderAll();
+          alert("다이어리 데이터를 성공적으로 복원했습니다! 🧸");
+        } catch (err) {
+          alert("파일을 읽는 중 오류가 발생했습니다.");
         }
-    </script>
+      };
+      reader.readAsText(file);
+      event.target.value = '';
+    }
+
+    function selectDate(dateStr) {
+      selectedDate = dateStr;
+      document.getElementById('taskDateInput').value = dateStr;
+      document.getElementById('selectedDateBadge').innerText = dateStr;
+      renderAll();
+    }
+
+    function goToToday() {
+      currentYear = realToday.getFullYear();
+      currentMonth = realToday.getMonth() + 1;
+      selectDate(realTodayStr);
+    }
+
+    function goToSpecifiedDate() {
+      const inputY = parseInt(document.getElementById('calYear').value);
+      const inputM = parseInt(document.getElementById('calMonth').value);
+
+      if (!inputY || inputY < 1900 || inputY > 2100) return alert("올바른 연도를 입력해주세요 (예: 2026)");
+      if (!inputM || inputM < 1 || inputM > 12) return alert("1월부터 12월 사이의 월을 입력해주세요.");
+
+      currentYear = inputY;
+      currentMonth = inputM;
+      renderAll();
+    }
+
+    function changeMonth(delta) {
+      currentMonth += delta;
+      if (currentMonth > 12) { currentMonth = 1; currentYear++; }
+      if (currentMonth < 1) { currentMonth = 12; currentYear--; }
+      renderAll();
+    }
+
+    function handleTaskDragStart(e, id) {
+      draggedTaskId = id;
+      e.dataTransfer.setData('text/plain', id);
+      e.stopPropagation();
+    }
+
+    function handleTaskDropOnTask(e, targetTaskId, targetDateStr) {
+      e.preventDefault();
+      e.stopPropagation();
+      if (!draggedTaskId || draggedTaskId === targetTaskId) return;
+
+      const draggedItem = tasks.find(t => t.id === draggedTaskId);
+      if (!draggedItem) return;
+
+      const rect = e.currentTarget.getBoundingClientRect();
+      const insertAfter = (e.clientY - rect.top) > (rect.height / 2);
+
+      let newTasks = tasks.filter(t => t.id !== draggedTaskId);
+      draggedItem.date = targetDateStr;
+
+      const targetIndex = newTasks.findIndex(t => t.id === targetTaskId);
+      if (targetIndex !== -1) {
+        newTasks.splice(insertAfter ? targetIndex + 1 : targetIndex, 0, draggedItem);
+      } else {
+        newTasks.push(draggedItem);
+      }
+
+      tasks = newTasks;
+      draggedTaskId = null;
+      saveAll();
+      renderAll();
+    }
+
+    function handleCalendarCellDrop(e, targetDateStr) {
+      e.preventDefault();
+      if (!draggedTaskId) return;
+
+      const draggedItem = tasks.find(t => t.id === draggedTaskId);
+      if (draggedItem) {
+        draggedItem.date = targetDateStr;
+        tasks = [...tasks.filter(t => t.id !== draggedTaskId), draggedItem];
+        saveAll();
+        renderAll();
+      }
+      draggedTaskId = null;
+    }
+
+    function renderCalendar() {
+      document.getElementById('calYear').value = currentYear;
+      document.getElementById('calMonth').value = currentMonth;
+
+      const firstDay = new Date(currentYear, currentMonth - 1, 1).getDay();
+      const lastDate = new Date(currentYear, currentMonth, 0).getDate();
+      const grid = document.getElementById('calendarGrid');
+      grid.innerHTML = '';
+
+      for (let i = 0; i < firstDay; i++) {
+        const emptyDiv = document.createElement('div');
+        emptyDiv.className = "min-h-[95px] rounded-2xl bg-[#FCFAF7] border border-transparent";
+        grid.appendChild(emptyDiv);
+      }
+
+      for (let d = 1; d <= lastDate; d++) {
+        const dateStr = `${currentYear}-${String(currentMonth).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+        const dayTasks = tasks.filter(t => t.date === dateStr);
+        const isToday = (dateStr === realTodayStr);
+        const isSelected = (dateStr === selectedDate);
+
+        const cell = document.createElement('div');
+        cell.className = `min-h-[95px] p-2 rounded-2xl border transition flex flex-col justify-between cursor-pointer ${
+          isSelected 
+            ? 'border-pink-400 bg-pink-50/40 ring-2 ring-pink-200' 
+            : isToday 
+            ? 'border-pink-300 bg-pink-50/20' 
+            : 'border-[#F2ECE1] bg-white hover:border-amber-200 hover:bg-[#FFFDFB]'
+        }`;
+        
+        cell.onclick = () => selectDate(dateStr);
+        cell.ondragover = (e) => e.preventDefault();
+        cell.ondrop = (e) => handleCalendarCellDrop(e, dateStr);
+
+        const todayTag = isToday 
+          ? `<span class="text-[9px] bg-pink-500 text-white font-bold px-1.5 py-0.5 rounded-md">오늘</span>` 
+          : '';
+
+        let badgeCount = dayTasks.length > 0 ? `<span class="text-[10px] text-pink-500 font-bold">● ${dayTasks.length}</span>` : '';
+        
+        const taskContainer = document.createElement('div');
+        taskContainer.className = "space-y-1 overflow-y-auto max-h-[65px] pr-0.5";
+
+        dayTasks.forEach(task => {
+          let colorClass = task.type === 'urgent' ? 'bg-rose-50 border-rose-200 text-rose-700' :
+                           task.type === 'optional' ? 'bg-emerald-50 border-emerald-200 text-emerald-700' : 'bg-amber-50 border-amber-200 text-amber-700';
+          if (task.completed) colorClass = 'line-through bg-gray-100 text-gray-400 border-gray-200';
+
+          const tEl = document.createElement('div');
+          tEl.draggable = true;
+          tEl.ondragstart = (e) => handleTaskDragStart(e, task.id);
+          tEl.ondragover = (e) => e.preventDefault();
+          tEl.ondrop = (e) => handleTaskDropOnTask(e, task.id, dateStr);
+          tEl.className = `text-[10px] px-1.5 py-1 rounded-lg border font-medium truncate flex items-center justify-between gap-1 cursor-grab active:cursor-grabbing transition ${colorClass}`;
+          
+          tEl.innerHTML = `
+            <span class="truncate cursor-pointer flex-1" onclick="event.stopPropagation(); toggleTask('${task.id}')">${task.title}</span>
+            <button onclick="event.stopPropagation(); deleteTask('${task.id}')" title="삭제" class="text-gray-400 hover:text-rose-500 font-bold px-1">✕</button>
+          `;
+
+          taskContainer.appendChild(tEl);
+        });
+
+        cell.innerHTML = `
+          <div class="flex justify-between items-center mb-1">
+            <div class="flex items-center gap-1">
+              <span class="text-xs font-bold text-[#6B6152] w-6 h-6 flex items-center justify-center rounded-full ${isToday ? 'bg-pink-100 text-pink-700' : 'bg-[#FAF6F0]'}">${d}</span>
+              ${todayTag}
+            </div>
+            ${badgeCount}
+          </div>
+        `;
+        cell.appendChild(taskContainer);
+        grid.appendChild(cell);
+      }
+    }
+
+    function renderGoals() {
+      ['mustDo', 'wishDo'].forEach(type => {
+        const listEl = document.getElementById(type + 'List');
+        listEl.innerHTML = '';
+        monthlyGoals[type].forEach(g => {
+          const item = document.createElement('div');
+          item.className = "flex items-center justify-between gap-2 bg-white px-3 py-2 rounded-xl border border-rose-100 text-sm";
+          item.innerHTML = `
+            <label class="flex items-center gap-2 cursor-pointer flex-1 overflow-hidden">
+              <input type="checkbox" ${g.done ? 'checked' : ''} onchange="toggleGoal('${type}', '${g.id}')" class="rounded text-pink-500 w-4 h-4 cursor-pointer shrink-0">
+              <span class="truncate ${g.done ? 'line-through text-gray-400' : ''}" ondblclick="openEditModal('goalEdit', {type: '${type}', id: '${g.id}'}, '${g.text}')" title="더블클릭하여 수정">${g.text}</span>
+            </label>
+            <div class="flex items-center gap-1 shrink-0">
+              <button onclick="openEditModal('goalEdit', {type: '${type}', id: '${g.id}'}, '${g.text}')" title="수정" class="text-gray-300 hover:text-pink-500 text-xs px-1">✏️</button>
+              <button onclick="deleteGoal('${type}', '${g.id}')" title="삭제" class="text-gray-300 hover:text-rose-500 text-xs px-1">✕</button>
+            </div>
+          `;
+          listEl.appendChild(item);
+        });
+      });
+    }
+
+    function toggleGoal(type, id) {
+      monthlyGoals[type] = monthlyGoals[type].map(g => g.id === id ? { ...g, done: !g.done } : g);
+      saveAll();
+      renderGoals();
+    }
+
+    function deleteGoal(type, id) {
+      monthlyGoals[type] = monthlyGoals[type].filter(g => g.id !== id);
+      saveAll();
+      renderGoals();
+    }
+
+    function ensureCurrentDayBudget() {
+      if (!dailyTimeBudgets[selectedDate]) {
+        dailyTimeBudgets[selectedDate] = {
+          fixedTime: { sleep: "07:00", meal: "02:00", commute: "01:30", rest: "01:30" },
+          customTimes: []
+        };
+      }
+    }
+
+    function renderTimeBudget() {
+      ensureCurrentDayBudget();
+      const currentBudget = dailyTimeBudgets[selectedDate];
+
+      document.getElementById('sleepTime').value = currentBudget.fixedTime.sleep;
+      document.getElementById('mealTime').value = currentBudget.fixedTime.meal;
+      document.getElementById('commuteTime').value = currentBudget.fixedTime.commute;
+      document.getElementById('restTime').value = currentBudget.fixedTime.rest;
+
+      const customList = document.getElementById('customTimeList');
+      customList.innerHTML = '';
+      currentBudget.customTimes.forEach(c => {
+        const rawHours = timeStringToHours(c.rawHoursStr);
+        const isLinkedTask = c.id.startsWith('auto_');
+
+        const div = document.createElement('div');
+        div.className = "flex items-center justify-between gap-3 bg-[#FCFAF7] p-3 rounded-2xl border border-[#F2ECE1]";
+        div.innerHTML = `
+          <div class="flex items-center gap-2 flex-1 overflow-hidden">
+            <span class="text-sm font-semibold text-[#5C5446] truncate cursor-pointer hover:text-pink-600 transition" onclick="openEditModal('customTimeTitle', '${c.id}', '${c.title}')" title="클릭하여 이름 수정">${c.title}</span>
+            ${isLinkedTask ? '<span class="text-[9px] bg-rose-100 text-rose-600 px-1.5 py-0.5 rounded-md font-bold shrink-0">태스크 연동</span>' : ''}
+          </div>
+          <div class="flex items-center gap-2 shrink-0">
+            <input type="text" value="${c.rawHoursStr}" onchange="updateCustomTimeHours('${c.id}', this.value)" class="w-16 bg-white px-2 py-1 rounded-xl text-xs font-bold text-center border border-[#E0D5C1] outline-none font-coding" title="시간 수정 (예: 02:00)">
+            <span class="text-xs text-[#8C7E6C] font-coding">(${rawHours.toFixed(1)}h)</span>
+            <span class="text-xs font-bold text-pink-600 bg-pink-50 px-2 py-1 rounded-lg border border-pink-200/60 font-coding">
+              환산: ${(rawHours * 1.5).toFixed(1)}h
+            </span>
+            <button onclick="deleteCustomTime('${c.id}')" title="삭제" class="text-gray-300 hover:text-rose-500">✕</button>
+          </div>
+        `;
+        customList.appendChild(div);
+      });
+
+      calculateTimeBudget();
+    }
+
+    function updateCustomTimeHours(id, newStr) {
+      ensureCurrentDayBudget();
+      const currentBudget = dailyTimeBudgets[selectedDate];
+      const target = currentBudget.customTimes.find(c => c.id === id);
+      if (!target) return;
+
+      if (!newStr.includes(':')) {
+        newStr = hoursToTimeString(parseFloat(newStr) || 1);
+      }
+      target.rawHoursStr = newStr;
+
+      if (id.startsWith('auto_')) {
+        const taskId = id.replace('auto_', '');
+        const t = tasks.find(task => task.id === taskId);
+        if (t) t.duration = newStr;
+      }
+
+      saveAll();
+      renderTimeBudget();
+    }
+
+    function calculateTimeBudget() {
+      ensureCurrentDayBudget();
+      const currentBudget = dailyTimeBudgets[selectedDate];
+
+      const sStr = document.getElementById('sleepTime').value;
+      const mStr = document.getElementById('mealTime').value;
+      const cStr = document.getElementById('commuteTime').value;
+      const rStr = document.getElementById('restTime').value;
+
+      currentBudget.fixedTime.sleep = sStr;
+      currentBudget.fixedTime.meal = mStr;
+      currentBudget.fixedTime.commute = cStr;
+      currentBudget.fixedTime.rest = rStr;
+
+      const sH = timeStringToHours(sStr);
+      const mH = timeStringToHours(mStr);
+      const cH = timeStringToHours(cStr);
+      const rH = timeStringToHours(rStr);
+
+      document.getElementById('sleepTimeHours').innerText = `${sH.toFixed(1)}h`;
+      document.getElementById('mealTimeHours').innerText = `${mH.toFixed(1)}h`;
+      document.getElementById('commuteTimeHours').innerText = `${cH.toFixed(1)}h`;
+      document.getElementById('restTimeHours').innerText = `${rH.toFixed(1)}h`;
+
+      const fixedTotal = sH + mH + cH + rH;
+      const customTotal = currentBudget.customTimes.reduce((acc, c) => acc + (timeStringToHours(c.rawHoursStr) * 1.5), 0);
+      const grandTotal = fixedTotal + customTotal;
+      const remaining = 24 - grandTotal;
+      const isOver = grandTotal > 24;
+
+      document.getElementById('grandTotalText').innerText = `${grandTotal.toFixed(1)}h`;
+      const remEl = document.getElementById('remainingTimeText');
+      if (isOver) {
+        remEl.className = "text-rose-500 font-bold";
+        remEl.innerText = `초과된 시간: ${Math.abs(remaining).toFixed(1)}h ⚠️`;
+      } else {
+        remEl.className = "text-emerald-600 font-bold";
+        remEl.innerText = `남은 시간: ${remaining.toFixed(1)}h ✨`;
+      }
+
+      const bar = document.getElementById('timeProgressBar');
+      bar.style.width = `${Math.min((grandTotal / 24) * 100, 100)}%`;
+      bar.className = isOver ? "h-full bg-rose-400 transition-all duration-300" : "h-full bg-gradient-to-r from-amber-300 to-pink-300 transition-all duration-300";
+
+      const alertEl = document.getElementById('overTimeAlert');
+      const addBtn = document.getElementById('addCustomTimeBtn');
+      if (isOver) {
+        alertEl.classList.remove('hidden');
+        addBtn.disabled = true;
+        addBtn.classList.add('opacity-40', 'cursor-not-allowed');
+      } else {
+        alertEl.classList.add('hidden');
+        addBtn.disabled = false;
+        addBtn.classList.remove('opacity-40', 'cursor-not-allowed');
+      }
+      saveAll();
+    }
+
+    function addCustomTime() {
+      ensureCurrentDayBudget();
+      const title = document.getElementById('customTitleInput').value.trim();
+      let hoursStr = document.getElementById('customHoursInput').value.trim();
+      if (!title || !hoursStr) return;
+
+      if (!hoursStr.includes(':')) {
+        hoursStr = hoursToTimeString(parseFloat(hoursStr) || 1);
+      }
+
+      dailyTimeBudgets[selectedDate].customTimes.push({
+        id: Date.now().toString(),
+        title,
+        rawHoursStr: hoursStr
+      });
+
+      document.getElementById('customTitleInput').value = '';
+      document.getElementById('customHoursInput').value = '';
+      saveAll();
+      renderTimeBudget();
+    }
+
+    function deleteCustomTime(id) {
+      ensureCurrentDayBudget();
+      dailyTimeBudgets[selectedDate].customTimes = dailyTimeBudgets[selectedDate].customTimes.filter(c => c.id !== id);
+
+      if (id.startsWith('auto_')) {
+        const linkedTaskId = id.replace('auto_', '');
+        tasks = tasks.filter(t => t.id !== linkedTaskId);
+      }
+
+      saveAll();
+      renderAll();
+    }
+
+    function renderTasks() {
+      ['urgent', 'optional', 'small'].forEach(type => {
+        const listEl = document.getElementById(`list-${type}`);
+        const badgeEl = document.getElementById(`badge-${type}`);
+        listEl.innerHTML = '';
+        
+        const filtered = tasks.filter(t => t.date === selectedDate && t.type === type);
+        badgeEl.innerText = filtered.length;
+
+        filtered.forEach(task => {
+          const card = document.createElement('div');
+          card.draggable = true;
+          card.ondragstart = (e) => handleTaskDragStart(e, task.id);
+          card.ondragover = (e) => e.preventDefault();
+          card.ondrop = (e) => handleTaskDropOnTask(e, task.id, selectedDate);
+          card.className = "bg-white p-3 rounded-xl border border-gray-100 shadow-xs flex items-center justify-between gap-2 hover:border-pink-200 transition cursor-grab active:cursor-grabbing";
+          card.innerHTML = `
+            <div class="flex items-center gap-2 overflow-hidden flex-1">
+              <input type="checkbox" ${task.completed ? 'checked' : ''} onchange="toggleTask('${task.id}')" class="rounded text-pink-400 cursor-pointer shrink-0">
+              <div class="truncate flex-1">
+                <p class="text-xs font-medium truncate cursor-pointer hover:text-pink-600 transition ${task.completed ? 'line-through text-gray-400' : 'text-[#5C5446]'}" onclick="openEditModal('taskTitle', '${task.id}', '${task.title}')" title="클릭하여 태스크 이름 수정">${task.title}</p>
+                <div class="flex items-center gap-2 text-[10px] text-gray-400 font-coding">
+                  <span>${task.date}</span>
+                  ${task.duration ? `<span class="bg-gray-100 text-gray-600 px-1 rounded cursor-pointer hover:bg-pink-100" onclick="openEditModal('taskDuration', '${task.id}', '${task.duration}')" title="클릭하여 예상시간 수정">${task.duration}</span>` : ''}
+                </div>
+              </div>
+            </div>
+            <div class="flex items-center gap-1 shrink-0">
+              <button onclick="openEditModal('taskTitle', '${task.id}', '${task.title}')" title="수정" class="text-gray-300 hover:text-pink-500 text-xs p-1">✏️</button>
+              <button onclick="deleteTask('${task.id}')" title="삭제" class="text-gray-300 hover:text-rose-400 p-1">✕</button>
+            </div>
+          `;
+          listEl.appendChild(card);
+        });
+      });
+    }
+
+    function handleAddTask(e) {
+      e.preventDefault();
+      const title = document.getElementById('taskTitleInput').value.trim();
+      const date = document.getElementById('taskDateInput').value;
+      const type = document.getElementById('taskTypeInput').value;
+      let duration = document.getElementById('taskDurationInput').value.trim() || "01:00";
+
+      if (!duration.includes(':')) {
+        duration = hoursToTimeString(parseFloat(duration) || 1);
+      }
+
+      if (!title || !date) return;
+
+      const newTaskId = Date.now().toString();
+      tasks.push({ id: newTaskId, title, date, type, duration, completed: false });
+
+      if (type === 'urgent') {
+        if (!dailyTimeBudgets[date]) {
+          dailyTimeBudgets[date] = {
+            fixedTime: { sleep: "07:00", meal: "02:00", commute: "01:30", rest: "01:30" },
+            customTimes: []
+          };
+        }
+        dailyTimeBudgets[date].customTimes.push({
+          id: 'auto_' + newTaskId,
+          title,
+          rawHoursStr: duration
+        });
+      }
+
+      document.getElementById('taskTitleInput').value = '';
+      selectDate(date);
+    }
+
+    function toggleTask(id) {
+      tasks = tasks.map(t => t.id === id ? { ...t, completed: !t.completed } : t);
+      saveAll();
+      renderAll();
+    }
+
+    function deleteTask(id) {
+      tasks = tasks.filter(t => t.id !== id);
+      if (dailyTimeBudgets[selectedDate]) {
+        dailyTimeBudgets[selectedDate].customTimes = dailyTimeBudgets[selectedDate].customTimes.filter(c => c.id !== 'auto_' + id);
+      }
+      saveAll();
+      renderAll();
+    }
+
+    // Circular Routine
+    let pieDraggingItem = null;
+    let dragStartOffsetAngle = 0;
+
+    function ensureCurrentRoutine() {
+      if (!dailyRoutines[selectedDate]) {
+        syncCalendarTasksToRoutine();
+      }
+    }
+
+    function syncCalendarTasksToRoutine() {
+      const todayTasks = tasks.filter(t => t.date === selectedDate);
+      const palette = ['#f43f5e', '#ec4899', '#8b5cf6', '#3b82f6', '#10b981', '#f59e0b', '#06b6d4'];
+      
+      let cursor = 540;
+
+      const newItems = todayTasks.map((t, idx) => {
+        const dur = Math.round(timeStringToHours(t.duration || "01:00") * 60);
+        const item = {
+          id: 'routine_' + t.id,
+          title: t.title,
+          startMinute: cursor % 1440,
+          durationMinutes: dur,
+          color: palette[idx % palette.length]
+        };
+        cursor += dur + 30;
+        return item;
+      });
+
+      dailyRoutines[selectedDate] = newItems.length > 0 ? newItems : [
+        { id: 'r_init1', title: '수면 🌙', startMinute: 0, durationMinutes: 420, color: '#818cf8' },
+        { id: 'r_init2', title: '점심 식사 🍚', startMinute: 720, durationMinutes: 60, color: '#f59e0b' },
+        { id: 'r_init3', title: '개인 집중 작업 💻', startMinute: 840, durationMinutes: 180, color: '#ec4899' }
+      ];
+
+      sortRoutineItems();
+      saveAll();
+      renderRoutineView();
+    }
+
+    function sortRoutineItems() {
+      if (!dailyRoutines[selectedDate]) return;
+      dailyRoutines[selectedDate].sort((a, b) => a.startMinute - b.startMinute);
+    }
+
+    function toggleRoutineModal(open) {
+      const modal = document.getElementById('routineModal');
+      if (open) {
+        modal.classList.remove('hidden');
+        ensureCurrentRoutine();
+        renderRoutineView();
+      } else {
+        modal.classList.add('hidden');
+      }
+    }
+
+    function adjustQuickMinutes(type, delta) {
+      const input = document.getElementById(`quickMinutes_${type}`);
+      let currentVal = parseInt(input.value) || 10;
+      currentVal = Math.max(10, currentVal + delta);
+      input.value = currentVal;
+    }
+
+    function findNextAvailableStart(duration) {
+      const items = dailyRoutines[selectedDate] || [];
+      if (items.length === 0) return 540;
+      const lastItem = items[items.length - 1];
+      return (lastItem.startMinute + lastItem.durationMinutes) % 1440;
+    }
+
+    function addQuickRoutineItem(title, type, color) {
+      ensureCurrentRoutine();
+      const minutes = parseInt(document.getElementById(`quickMinutes_${type}`).value) || 30;
+      const startMin = findNextAvailableStart(minutes);
+
+      dailyRoutines[selectedDate].push({
+        id: 'r_' + Date.now().toString(),
+        title,
+        startMinute: startMin,
+        durationMinutes: minutes,
+        color
+      });
+      sortRoutineItems();
+      saveAll();
+      renderRoutineView();
+    }
+
+    function addCustomRoutineItem() {
+      ensureCurrentRoutine();
+      const title = document.getElementById('customRoutineTitle').value.trim();
+      const startStr = document.getElementById('customRoutineStart').value.trim();
+      const minutes = parseInt(document.getElementById('customRoutineMinutes').value);
+      if (!title || isNaN(minutes) || minutes <= 0) return;
+
+      const startMin = timeStringToMinutes(startStr);
+      const palette = ['#06b6d4', '#10b981', '#f97316', '#a855f7', '#ec4899'];
+      const color = palette[Math.floor(Math.random() * palette.length)];
+
+      dailyRoutines[selectedDate].push({
+        id: 'r_' + Date.now().toString(),
+        title,
+        startMinute: startMin % 1440,
+        durationMinutes: minutes,
+        color
+      });
+
+      document.getElementById('customRoutineTitle').value = '';
+      sortRoutineItems();
+      saveAll();
+      renderRoutineView();
+    }
+
+    function deleteRoutineItem(id) {
+      ensureCurrentRoutine();
+      dailyRoutines[selectedDate] = dailyRoutines[selectedDate].filter(item => item.id !== id);
+      saveAll();
+      renderRoutineView();
+    }
+
+    function updateRoutineItemTime(id, newStartStr, newDuration) {
+      ensureCurrentRoutine();
+      const item = dailyRoutines[selectedDate].find(it => it.id === id);
+      if (!item) return;
+
+      if (newStartStr !== undefined) {
+        item.startMinute = timeStringToMinutes(newStartStr) % 1440;
+      }
+      if (newDuration !== undefined) {
+        item.durationMinutes = Math.max(5, parseInt(newDuration) || 10);
+      }
+
+      sortRoutineItems();
+      saveAll();
+      renderRoutineView();
+    }
+
+    function getAngleFromEvent(e, svgEl) {
+      const rect = svgEl.getBoundingClientRect();
+      const cx = rect.left + rect.width / 2;
+      const cy = rect.top + rect.height / 2;
+      const dx = e.clientX - cx;
+      const dy = e.clientY - cy;
+      
+      let deg = (Math.atan2(dy, dx) * 180 / Math.PI) + 90;
+      if (deg < 0) deg += 360;
+      return deg;
+    }
+
+    function onPieMouseDown(e, item) {
+      e.preventDefault();
+      e.stopPropagation();
+
+      const svg = document.getElementById('routineSvg');
+      svg.style.cursor = 'grabbing';
+
+      const clickAngle = getAngleFromEvent(e, svg);
+      const currentStartAngle = (item.startMinute / 1440) * 360;
+      dragStartOffsetAngle = clickAngle - currentStartAngle;
+      pieDraggingItem = item;
+
+      function onMouseMove(moveEvent) {
+        if (!pieDraggingItem) return;
+        const currentMouseAngle = getAngleFromEvent(moveEvent, svg);
+        let newStartAngle = (currentMouseAngle - dragStartOffsetAngle) % 360;
+        if (newStartAngle < 0) newStartAngle += 360;
+
+        let newStartMinute = Math.round(((newStartAngle / 360) * 1440) / 10) * 10;
+        newStartMinute = ((newStartMinute % 1440) + 1440) % 1440;
+
+        pieDraggingItem.startMinute = newStartMinute;
+        renderRoutineSvgOnly();
+      }
+
+      function onMouseUp() {
+        document.removeEventListener('mousemove', onMouseMove);
+        document.removeEventListener('mouseup', onMouseUp);
+        svg.style.cursor = 'default';
+
+        if (pieDraggingItem) {
+          sortRoutineItems();
+          saveAll();
+          renderRoutineView();
+          pieDraggingItem = null;
+        }
+      }
+
+      document.addEventListener('mousemove', onMouseMove);
+      document.addEventListener('mouseup', onMouseUp);
+    }
+
+    function renderRoutineSvgOnly() {
+      const items = dailyRoutines[selectedDate] || [];
+      const svg = document.getElementById('routineSvg');
+      svg.innerHTML = '';
+
+      const cx = 150;
+      const cy = 150;
+      const r = 115;
+
+      const bgCircle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+      bgCircle.setAttribute("cx", cx);
+      bgCircle.setAttribute("cy", cy);
+      bgCircle.setAttribute("r", r);
+      bgCircle.setAttribute("fill", "#FAF6F0");
+      bgCircle.setAttribute("stroke", "#ECE4D5");
+      bgCircle.setAttribute("stroke-width", "2");
+      svg.appendChild(bgCircle);
+
+      const axes = [
+        `M ${cx} 35 L ${cx} 265`,
+        `M 35 ${cy} L 265 ${cy}`
+      ];
+      axes.forEach(d => {
+        const line = document.createElementNS("http://www.w3.org/2000/svg", "path");
+        line.setAttribute("d", d);
+        line.setAttribute("stroke", "#E0D5C1");
+        line.setAttribute("stroke-dasharray", "3 3");
+        line.setAttribute("stroke-width", "1");
+        svg.appendChild(line);
+      });
+
+      items.forEach(item => {
+        const startAngle = (item.startMinute / 1440) * 360 - 90;
+        const angleSpan = (item.durationMinutes / 1440) * 360;
+        const endAngle = startAngle + angleSpan;
+
+        const radStart = (startAngle * Math.PI) / 180;
+        const radEnd = (endAngle * Math.PI) / 180;
+
+        const x1 = cx + r * Math.cos(radStart);
+        const y1 = cy + r * Math.sin(radStart);
+        const x2 = cx + r * Math.cos(radEnd);
+        const y2 = cy + r * Math.sin(radEnd);
+
+        const largeArc = angleSpan > 180 ? 1 : 0;
+        const pathData = `M ${cx} ${cy} L ${x1} ${y1} A ${r} ${r} 0 ${largeArc} 1 ${x2} ${y2} Z`;
+        
+        const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
+        path.setAttribute("d", pathData);
+        path.setAttribute("fill", item.color);
+        path.setAttribute("opacity", "0.85");
+        path.setAttribute("stroke", "#ffffff");
+        path.setAttribute("stroke-width", "1.5");
+        path.setAttribute("class", "hover:opacity-100 hover:stroke-rose-400 cursor-grab active:cursor-grabbing transition-opacity");
+
+        path.onmousedown = (e) => onPieMouseDown(e, item);
+
+        const endMin = item.startMinute + item.durationMinutes;
+        const tooltip = document.createElementNS("http://www.w3.org/2000/svg", "title");
+        tooltip.textContent = `${item.title}: ${minutesToTimeString(item.startMinute)} ~ ${minutesToTimeString(endMin)} (${item.durationMinutes}분)`;
+        path.appendChild(tooltip);
+
+        svg.appendChild(path);
+      });
+
+      const centerCircle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+      centerCircle.setAttribute("cx", cx);
+      centerCircle.setAttribute("cy", cy);
+      centerCircle.setAttribute("r", 18);
+      centerCircle.setAttribute("fill", "#ffffff");
+      centerCircle.setAttribute("stroke", "#F2ECE1");
+      centerCircle.setAttribute("stroke-width", "2");
+      svg.appendChild(centerCircle);
+    }
+
+    function renderRoutineView() {
+      ensureCurrentRoutine();
+      sortRoutineItems();
+      const items = dailyRoutines[selectedDate] || [];
+
+      const listEl = document.getElementById('routineItemList');
+      listEl.innerHTML = '';
+      
+      let totalMinutes = 0;
+      items.forEach(item => {
+        totalMinutes += item.durationMinutes;
+        const endMin = item.startMinute + item.durationMinutes;
+
+        const div = document.createElement('div');
+        div.className = "flex items-center justify-between gap-2 p-2 bg-[#FAF6F0] rounded-xl border border-[#ECE4D5] hover:border-pink-300 transition";
+        div.innerHTML = `
+          <div class="flex items-center gap-2 flex-1 overflow-hidden">
+            <span class="w-3 h-3 rounded-full shrink-0" style="background-color: ${item.color}"></span>
+            <div class="truncate flex-1">
+              <p class="text-xs font-bold text-[#433B32] truncate">${item.title}</p>
+              <div class="flex items-center gap-1.5 text-[11px] text-[#8C7E6C] font-coding">
+                <input 
+                  type="text" 
+                  value="${minutesToTimeString(item.startMinute)}" 
+                  onchange="updateRoutineItemTime('${item.id}', this.value, undefined)"
+                  class="w-12 bg-white px-1 py-0.5 rounded border border-[#E0D5C1] text-center font-bold outline-none"
+                  title="시작 시간"
+                >
+                <span>~</span>
+                <span class="text-gray-400 font-bold">${minutesToTimeString(endMin)}</span>
+                <span>(</span>
+                <input 
+                  type="number" 
+                  value="${item.durationMinutes}" 
+                  min="5" 
+                  step="5"
+                  onchange="updateRoutineItemTime('${item.id}', undefined, this.value)"
+                  class="w-10 bg-white px-1 py-0.5 rounded border border-[#E0D5C1] text-center font-bold outline-none"
+                  title="소요 분"
+                >
+                <span>분)</span>
+              </div>
+            </div>
+          </div>
+          <button onclick="deleteRoutineItem('${item.id}')" class="text-gray-300 hover:text-rose-500 p-1 text-xs shrink-0">✕</button>
+        `;
+        listEl.appendChild(div);
+      });
+
+      const totalH = Math.floor(totalMinutes / 60);
+      const totalM = totalMinutes % 60;
+      document.getElementById('routineTotalHours').innerText = `${totalH}h ${totalM}m`;
+
+      renderRoutineSvgOnly();
+    }
+
+    function renderAll() {
+      renderCalendar();
+      renderGoals();
+      renderDdays();
+      renderTimeBudget();
+      renderTasks();
+    }
+
+    renderAppTitle();
+    renderCalMotto();
+    renderDdays();
+    selectDate(realTodayStr);
+  </script>
 </body>
 </html>
